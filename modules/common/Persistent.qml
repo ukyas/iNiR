@@ -83,6 +83,7 @@ Singleton {
 
             property JsonObject booru: JsonObject {
                 property bool allowNsfw: false
+                property bool showTagsOnHover: true
                 property string provider: "yandere"
             }
 
