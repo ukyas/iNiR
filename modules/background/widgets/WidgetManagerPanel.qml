@@ -129,7 +129,7 @@ Item {
             Item {
                 id: customDelegate
                 required property var modelData
-                readonly property bool widgetEnabled: Config.options?.background?.widgets?.custom?.[modelData.id]?.enable ?? true
+                readonly property bool widgetEnabled: Config.customWidgetData?.[modelData.id]?.enable ?? true
                 width: _wmCol.width; height: 36
                 Row {
                     anchors.verticalCenter: parent.verticalCenter

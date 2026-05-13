@@ -1811,20 +1811,20 @@ ContentPage {
                         Layout.fillWidth: false
                         buttonIcon: cwDelegate.modelData.icon || "widgets"
                         text: cwDelegate.modelData.name
-                        checked: Config.options?.background?.widgets?.custom?.[cwDelegate.modelData.id]?.enable ?? true
+                        checked: Config.customWidgetData?.[cwDelegate.modelData.id]?.enable ?? true
                         onCheckedChanged: Config.setNestedValue("background.widgets.custom." + cwDelegate.modelData.id + ".enable", checked)
                     }
                     Item { Layout.fillWidth: true }
                     WidgetPlacementSelector {
                         configPath: "background.widgets.custom." + cwDelegate.modelData.id
-                        configEntry: Config.options?.background?.widgets?.custom?.[cwDelegate.modelData.id]
+                        configEntry: Config.customWidgetData?.[cwDelegate.modelData.id]
                         defaultStrategy: "free"
                     }
                 }
 
                 WidgetZonePicker {
                     configPath: "background.widgets.custom." + cwDelegate.modelData.id
-                    configEntry: Config.options?.background?.widgets?.custom?.[cwDelegate.modelData.id]
+                    configEntry: Config.customWidgetData?.[cwDelegate.modelData.id]
                 }
 
                 // Meta row: version, author, actions
@@ -1928,7 +1928,7 @@ ContentPage {
 
                 WidgetAppearanceControls {
                     configPath: "background.widgets.custom." + cwDelegate.modelData.id
-                    configEntry: Config.options?.background?.widgets?.custom?.[cwDelegate.modelData.id]
+                    configEntry: Config.customWidgetData?.[cwDelegate.modelData.id]
                 }
             }
         }

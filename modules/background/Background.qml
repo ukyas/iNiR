@@ -1255,7 +1255,7 @@ Scope {
                                 model: CustomWidgets.ready ? CustomWidgets.widgets : []
                                 RippleButton {
                                     required property var modelData
-                                    readonly property bool widgetEnabled: Config.options?.background?.widgets?.custom?.[modelData.id]?.enable ?? true
+                                    readonly property bool widgetEnabled: Config.customWidgetData?.[modelData.id]?.enable ?? true
                                     width: 36; height: 36
                                     buttonRadius: Appearance.rounding.full
                                     toggled: widgetEnabled
@@ -1428,7 +1428,7 @@ Scope {
                         required property var modelData
                         required property int index
 
-                        readonly property bool shown: Config.options?.background?.widgets?.custom?.[modelData.id]?.enable ?? true
+                        readonly property bool shown: Config.customWidgetData?.[modelData.id]?.enable ?? true
                         active: shown
                         opacity: shown ? 1 : 0
                         visible: opacity > 0

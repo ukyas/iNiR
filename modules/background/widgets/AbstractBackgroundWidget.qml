@@ -21,9 +21,18 @@ AbstractWidget {
     required property real wallpaperScale
     property bool visibleWhenLocked: false
     property int widgetIndex: 0 // used to offset auto-placed widgets so they don't stack
-    // Supports nested configEntryName like "custom.my-widget" → widgets.custom["my-widget"]
+    // Supports nested configEntryName like "custom.my-widget"
+    // Custom widget data lives in Config.customWidgetData (outside adapter).
     property var configEntry: {
         const parts = configEntryName.split(".");
+        if (parts[0] === "custom") {
+            let obj = Config.customWidgetData;
+            for (let i = 1; i < parts.length; i++) {
+                if (obj == null) return {};
+                obj = obj[parts[i]];
+            }
+            return obj ?? {};
+        }
         let obj = Config.options?.background?.widgets;
         for (let i = 0; i < parts.length; i++) {
             if (obj == null) return {};

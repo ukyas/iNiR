@@ -102,7 +102,7 @@ Singleton {
 
     // Get a custom widget's config value (freeform namespace)
     function getConfigValue(widgetId: string, key: string, defaultValue: var): var {
-        return Config.options?.background?.widgets?.custom?.[widgetId]?.[key] ?? defaultValue;
+        return Config.customWidgetData?.[widgetId]?.[key] ?? defaultValue;
     }
 
     // Set a custom widget's config value

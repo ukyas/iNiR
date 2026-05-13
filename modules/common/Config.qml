@@ -12,12 +12,14 @@ Singleton {
     property bool isSettingsProcess: (Quickshell.env("INIR_STANDALONE_WINDOW") ?? "") === "1"
     property int readWriteDelay: 50 // milliseconds
     property bool blockWrites: false
+    // Custom widget data stored outside JsonAdapter to avoid VME crash on property var
+    property var customWidgetData: ({})
 
     signal configChanged
 
     function flushWrites(): void {
         fileWriteTimer.stop();
-        configFileView.writeAdapter();
+        root._writeConfigWithCustomData();
     }
 
     function _applyNestedKey(nestedKey, value) {
@@ -35,6 +37,26 @@ Singleton {
             console.warn("[Config] setNestedValue called with empty key");
             return;
         }
+
+        // Route custom widget paths to standalone property (outside adapter)
+        if (keys.length >= 3 && keys[0] === "background" && keys[1] === "widgets" && keys[2] === "custom") {
+            const subKeys = keys.slice(3);
+            if (subKeys.length === 0) {
+                root.customWidgetData = (typeof value === "object" && value !== null) ? value : {};
+                return;
+            }
+            let obj = root.customWidgetData;
+            for (let i = 0; i < subKeys.length - 1; ++i) {
+                if (!obj[subKeys[i]] || typeof obj[subKeys[i]] !== "object")
+                    obj[subKeys[i]] = {};
+                obj = obj[subKeys[i]];
+            }
+            obj[subKeys[subKeys.length - 1]] = value;
+            // Defer to avoid binding loops (signal fires during onCheckedChanged)
+            Qt.callLater(root.customWidgetDataChanged);
+            return;
+        }
+
         let obj = root.options;
 
         // Traverse to parent object
@@ -63,6 +85,8 @@ Singleton {
 
     function setNestedValue(nestedKey, value) {
         _applyNestedKey(nestedKey, value);
+        // Ensure a file write even for property var paths (adapter can't detect those)
+        fileWriteTimer.restart();
         root.configChanged();
     }
 
@@ -75,18 +99,33 @@ Singleton {
         for (let i = 0; i < paths.length; ++i) {
             _applyNestedKey(paths[i], updates[paths[i]]);
         }
-        if (paths.length > 0)
+        if (paths.length > 0) {
+            fileWriteTimer.restart();
             root.configChanged();
+        }
     }
 
-    // JsonAdapter doesn't populate property var inside nested JsonObjects on load.
-    // This manually syncs them from the raw JSON after adapter load/reload.
+    // Custom widget data lives outside the JsonAdapter (property var inside
+    // nested JsonObjects causes a VME segfault). Sync from raw JSON on load.
     function _syncVarProperties(): void {
         try {
-            const raw = JSON.parse(configFileView.text());
-            const customData = raw?.background?.widgets?.custom;
-            if (customData && typeof customData === "object")
-                configOptionsJsonAdapter.background.widgets.custom = customData;
+            rawConfigReader.reload();
+            const raw = JSON.parse(rawConfigReader.text());
+            root.customWidgetData = raw?.background?.widgets?.custom ?? {};
+        } catch (e) {}
+    }
+
+    // Persist customWidgetData back into the JSON file alongside the adapter tree.
+    function _writeConfigWithCustomData(): void {
+        configFileView.writeAdapter();
+        try {
+            const text = configFileView.text();
+            if (!text) return;
+            const obj = JSON.parse(text);
+            if (!obj.background) obj.background = {};
+            if (!obj.background.widgets) obj.background.widgets = {};
+            obj.background.widgets.custom = root.customWidgetData;
+            configFileView.setText(JSON.stringify(obj, null, 4));
         } catch (e) {}
     }
 
@@ -105,8 +144,14 @@ Singleton {
         interval: root.readWriteDelay
         repeat: false
         onTriggered: {
-            configFileView.writeAdapter();
+            root._writeConfigWithCustomData();
         }
+    }
+
+    // Raw reader for keys the adapter can't handle (property var in JsonObject)
+    FileView {
+        id: rawConfigReader
+        path: root.filePath
     }
 
     FileView {
@@ -662,8 +707,8 @@ Singleton {
                         property bool snap: true
                     }
 
-                    // Freeform container for user custom widgets (dynamic IDs)
-                    property var custom: ({})
+                    // Custom widget data lives in root.customWidgetData (not here)
+                    // to avoid JsonAdapter crash on property var inside JsonObject.
                 }
                 property string wallpaperPath: ""
                 property string thumbnailPath: ""
