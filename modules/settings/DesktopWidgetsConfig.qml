@@ -412,6 +412,18 @@ ContentPage {
                     }
                 }
             }
+            WidgetSettingRow {
+                label: Translation.tr("Fade with windows")
+                icon: "visibility_off"
+                StyledSpinBox {
+                    from: 0; to: 100; stepSize: 10
+                    value: Config.getNestedValue("background.widgets.dynamicOpacity", 0)
+                    onValueModified: Config.setNestedValue("background.widgets.dynamicOpacity", value)
+                    StyledToolTip {
+                        text: Translation.tr("Reduce widget opacity when windows are on the current workspace (0 = off)")
+                    }
+                }
+            }
         }
     }
 

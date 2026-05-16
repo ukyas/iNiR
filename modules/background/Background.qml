@@ -1017,6 +1017,15 @@ Scope {
                 id: widgetCanvas
                 z: 20
                 enabled: !GlobalStates.screenLocked  // Disable all widget input during lock
+                opacity: {
+                    const dynOp = Math.max(0, Math.min(100, Number(Config.options?.background?.widgets?.dynamicOpacity) || 0));
+                    if (dynOp <= 0 || !bgRoot.focusWindowsPresent) return 1;
+                    return 1 - (dynOp / 100) * bgRoot.focusPresenceProgress;
+                }
+                Behavior on opacity {
+                    enabled: Appearance.animationsEnabled
+                    animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                }
                 readonly property bool useParallax: wallpaperContainer.useParallax && !bgRoot.backdropActive
                 anchors {
                     left: useParallax ? wallpaperContainer.left : parent.left
