@@ -1847,15 +1847,20 @@ refresh_sddm_theme_on_update() {
         return 0
     fi
 
+    # Always refresh on update — settings like InputMethod may have changed
+    local auto_apply_mode="yes"
+    if [[ "$ask_mode" == "true" ]]; then
+        # Interactive: let installer ask if switching from another theme
+        auto_apply_mode="ask"
+    fi
+
     echo ""
     tui_info "Refreshing ii-pixel SDDM theme..."
 
-    local auto_apply_mode="ask"
-    if [[ "$ask_mode" != "true" ]]; then
-        auto_apply_mode="no"
+    if ! extras_install_sddm_theme "$auto_apply_mode"; then
+        tui_warn "SDDM theme refresh failed — you may need to run manually:"
+        tui_dim "  sudo bash ${REPO_ROOT}/scripts/sddm/install-pixel-sddm.sh"
     fi
-
-    extras_install_sddm_theme "$auto_apply_mode" || tui_warn "SDDM refresh had issues (non-fatal)"
 }
 
 run_update() {

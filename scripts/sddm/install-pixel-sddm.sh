@@ -163,30 +163,44 @@ import sys; sys.stdout.buffer.write(make_png())
     fi
 fi
 
-# Configure SDDM to use this theme (intelligent: optional if user has another theme)
-if should_apply_theme; then
-    log_info "Configuring SDDM to use ${THEME_NAME}..."
-    
-    # Remove any existing Current= line from /etc/sddm.conf to avoid conflicts
-    # The drop-in /etc/sddm.conf.d/ only works if the main file doesn't override it
-    if [[ -f /etc/sddm.conf ]] && grep -q '^\s*Current\s*=' /etc/sddm.conf 2>/dev/null; then
-        log_info "Removing conflicting theme setting from /etc/sddm.conf..."
-        elevate sed -i '/^\s*Current\s*=/d' /etc/sddm.conf
-    fi
-    
-    elevate mkdir -p /etc/sddm.conf.d
-    # Use X11 as display server - Wayland (kwin_wayland) crashes in some environments (VMs, etc.)
-    elevate tee "${SDDM_CONF}" > /dev/null << SDDM_EOF
-[General]
+# Configure SDDM to use this theme
+# Two concerns: (1) set Current theme, (2) ensure settings (DisplayServer, InputMethod) are correct.
+# On updates where ii-pixel is already active, we still need to patch settings.
+
+desired_conf="[General]
 DisplayServer=x11
 InputMethod=
 
 [Theme]
-Current=${THEME_NAME}
-SDDM_EOF
-    log_ok "SDDM configured (${SDDM_CONF}) with X11 display server"
+Current=${THEME_NAME}"
+
+current_conf=""
+[[ -f "$SDDM_CONF" ]] && current_conf=$(cat "$SDDM_CONF" 2>/dev/null || true)
+
+if [[ "$current_conf" == "$desired_conf" ]]; then
+    log_ok "SDDM configuration already up to date"
 else
-    log_info "Installed ${THEME_NAME}, but did not change SDDM Current theme"
+    if should_apply_theme; then
+        log_info "Updating SDDM configuration (requires sudo)..."
+
+        # Remove any existing Current= line from /etc/sddm.conf to avoid conflicts
+        if [[ -f /etc/sddm.conf ]] && grep -q '^\s*Current\s*=' /etc/sddm.conf 2>/dev/null; then
+            log_info "Removing conflicting theme setting from /etc/sddm.conf..."
+            elevate sed -i '/^\s*Current\s*=/d' /etc/sddm.conf
+        fi
+
+        elevate mkdir -p /etc/sddm.conf.d
+        echo "$desired_conf" | elevate tee "${SDDM_CONF}" > /dev/null
+        log_ok "SDDM configured (${SDDM_CONF})"
+    elif [[ -f "$SDDM_CONF" ]] && grep -q "Current=${THEME_NAME}" "$SDDM_CONF" 2>/dev/null; then
+        # Theme is already ii-pixel but settings are stale — update without asking
+        log_info "Updating SDDM settings (requires sudo)..."
+        elevate mkdir -p /etc/sddm.conf.d
+        echo "$desired_conf" | elevate tee "${SDDM_CONF}" > /dev/null
+        log_ok "SDDM settings updated (${SDDM_CONF})"
+    else
+        log_info "Installed ${THEME_NAME}, but did not change SDDM Current theme"
+    fi
 fi
 
 # Run initial color sync now that files are in place
