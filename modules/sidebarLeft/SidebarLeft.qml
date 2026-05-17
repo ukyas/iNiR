@@ -26,7 +26,7 @@ Scope {
         interval: 50
         onTriggered: root._pluginTransitioning = false
     }
-    readonly property real effectiveSidebarWidth: pluginViewActive
+    readonly property real effectiveSidebarWidth: (pluginViewActive || GlobalStates.sidebarLeftExpanded)
         ? Appearance.sizes.sidebarWidthExtended
         : sidebarWidth
 
@@ -52,10 +52,12 @@ Scope {
                     Qt.callLater(() => { root._sidebarShown = true })
                 } else if (root.instantOpen || !Appearance.animationsEnabled) {
                     root._sidebarShown = false
+                    GlobalStates.sidebarLeftExpanded = false
                     _closeTimer.stop()
                     sidebarRoot.visible = false
                 } else {
                     root._sidebarShown = false
+                    GlobalStates.sidebarLeftExpanded = false
                     _closeTimer.restart()
                 }
             }
