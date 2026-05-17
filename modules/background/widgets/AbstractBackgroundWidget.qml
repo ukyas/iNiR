@@ -226,6 +226,30 @@ AbstractWidget {
         when: root._autoPosition
         restoreMode: Binding.RestoreNone
     }
+
+    // Re-clamp position in "free" mode when the widget grows past the screen
+    // edge (e.g. media widget gaining an extra MPRIS player). Without these,
+    // the user has to manually reposition each time content size changes.
+    // Bindings are inactive while user is interacting (drag/resize), and never
+    // overwrite the saved config — only the rendered position.
+    readonly property bool _freeModeOverflowGuard: root.placementStrategy === "free"
+        && Config.ready
+        && root.width > 0 && root.height > 0
+        && !(GlobalStates.widgetEditMode && (root.isDragging || root.containsPress || root._isResizing || root._releaseGuard))
+    Binding {
+        target: root
+        property: "x"
+        value: Math.max(0, root.scaledScreenWidth - root.width)
+        when: root._freeModeOverflowGuard && (root.x + root.width > root.scaledScreenWidth)
+        restoreMode: Binding.RestoreNone
+    }
+    Binding {
+        target: root
+        property: "y"
+        value: Math.max(0, root.scaledScreenHeight - root.height)
+        when: root._freeModeOverflowGuard && (root.y + root.height > root.scaledScreenHeight)
+        restoreMode: Binding.RestoreNone
+    }
     Behavior on x {
         enabled: Appearance.animationsEnabled && root._autoPosition
         NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
