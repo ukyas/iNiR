@@ -387,6 +387,7 @@ Singleton {
                 } else {
                     Quickshell.execDetached(["/usr/bin/bash", Directories.recordScriptPath])
                 }
+                RecorderStatus.scheduleQuickCheck()
             }
         },
         {
