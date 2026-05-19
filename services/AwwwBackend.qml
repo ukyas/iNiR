@@ -223,7 +223,7 @@ Singleton {
 
         if (!available) {
             _probe()
-            if (!warnedMissing) {
+            if (!warnedMissing && !probing) {
                 console.warn("[AwwwBackend] awww backend selected but binaries are unavailable")
                 warnedMissing = true
             }
