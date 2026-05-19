@@ -285,6 +285,7 @@ Singleton {
         id: cacheFileView
         path: root.cachePath
         watchChanges: false
+        printErrors: false
         onLoaded: {
             const content = cacheFileView.text()
             if (!content || content.trim() === "") {
