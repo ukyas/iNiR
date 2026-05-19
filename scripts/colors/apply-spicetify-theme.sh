@@ -108,7 +108,7 @@ is_live_install_patched() {
 }
 
 get_debugger_port() {
-  pgrep -af 'spotify.*remote-debugging-port=' | sed -n 's/.*--remote-debugging-port=\([0-9]\+\).*/\1/p' | head -n1
+  pgrep -af 'spotify.*remote-debugging-port=' 2>/dev/null | sed -n 's/.*--remote-debugging-port=\([0-9]\+\).*/\1/p' | head -n1 || true
 }
 
 reload_running_spotify() {
@@ -419,6 +419,29 @@ download_sleek_css() {
 
 # ─── Spicetify operations ──────────────────────────────────────────────────────
 
+CDP_PORT=8976
+
+ensure_spotify_desktop_override() {
+  # Create a .desktop override that launches Spotify with CDP enabled for live reload.
+  local user_apps="$HOME/.local/share/applications"
+  local override="$user_apps/spotify.desktop"
+  local system_desktop="/usr/share/applications/spotify.desktop"
+
+  # Already has the port? Skip.
+  if [[ -f "$override" ]] && grep -q "remote-debugging-port=$CDP_PORT" "$override" 2>/dev/null; then
+    return 0
+  fi
+
+  [[ -f "$system_desktop" ]] || return 0
+  mkdir -p "$user_apps" 2>/dev/null || return 0
+
+  sed "s|^Exec=spotify|Exec=spotify --remote-debugging-port=$CDP_PORT|" \
+    "$system_desktop" > "$override"
+  # TryExec must remain just the binary name
+  sed -i 's|^TryExec=.*|TryExec=spotify|' "$override"
+  log "Created Spotify desktop override with CDP port $CDP_PORT"
+}
+
 configure_spicetify() {
   local theme_dir="$1"
   local color_file="$theme_dir/color.ini"
@@ -492,6 +515,9 @@ main() {
     exit 1
   }
 
+  # Ensure Spotify launches with CDP for live reload on next start
+  ensure_spotify_desktop_override
+
   local spotify_running=false
   is_process_running "spotify" && spotify_running=true
 
@@ -513,14 +539,16 @@ main() {
     fi
   fi
 
+  # Never run spicetify apply when Spotify isn't running — some versions
+  # launch Spotify as a side effect despite the -n flag.
+  if ! $spotify_running; then
+    log "Spotify not running - theme files written for next launch (skipping apply)"
+    exit 0
+  fi
+
   if ! apply_spicetify_theme; then
     log "spicetify -n apply failed; theme files written but install was not patched"
     exit 1
-  fi
-
-  if ! $spotify_running; then
-    log "Spotify not running - theme applied to bundle for next launch"
-    exit 0
   fi
 
   if [[ -n "$xpui_dir" ]] && is_live_install_patched "$xpui_dir"; then
