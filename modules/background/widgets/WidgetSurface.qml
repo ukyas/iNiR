@@ -38,11 +38,21 @@ Rectangle {
     color: _glass ? "transparent"
         : _inir ? "transparent"
         : surfaceOpacity > 0 ? ColorUtils.applyAlpha(surfaceColor, surfaceOpacity) : "transparent"
-    border.width: _glass ? 0 : (_inir ? surfaceBorderWidth : surfaceBorderWidth)
-    border.color: _glass ? "transparent"
-        : _inir ? ColorUtils.applyAlpha(Appearance.inir.colBorder, surfaceBorderOpacity * 3)
-        : ColorUtils.applyAlpha(surfaceColor, surfaceBorderOpacity)
+    border.width: 0
+    border.color: "transparent"
     clip: true
+
+    // Separate border overlay — avoids Qt's interior bleed when border.width > 0 on a transparent Rectangle
+    Rectangle {
+        anchors.fill: parent
+        radius: root.radius
+        color: "transparent"
+        visible: !root._glass && root.surfaceBorderWidth > 0 && root.surfaceBorderOpacity > 0
+        border.width: root.surfaceBorderWidth
+        border.color: root._inir
+            ? ColorUtils.applyAlpha(Appearance.inir.colBorder, root.surfaceBorderOpacity * 3)
+            : ColorUtils.applyAlpha(root.surfaceColor, root.surfaceBorderOpacity)
+    }
 
     // Blur layer for aurora/angel
     layer.enabled: _glass

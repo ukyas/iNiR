@@ -833,8 +833,11 @@ Scope {
                             : bgRoot.fillMode === "center" ? Image.Pad
                             : Image.PreserveAspectCrop
                     sourceSize {
-                        width: Math.max(1, Math.round(bgRoot.screen.width * (bgRoot.externalMainWallpaperActive ? 1 : bgRoot.effectiveWallpaperScale) * (bgRoot.monitor?.scale ?? 1)))
-                        height: Math.max(1, Math.round(bgRoot.screen.height * (bgRoot.externalMainWallpaperActive ? 1 : bgRoot.effectiveWallpaperScale) * (bgRoot.monitor?.scale ?? 1)))
+                        // Decode at screen resolution × monitor DPI scale. Do NOT multiply by
+                        // parallax effectiveWallpaperScale — that causes CPU upscaling which
+                        // produces pixelation. GPU scaling handles the parallax zoom cleanly.
+                        width: Math.max(1, Math.round(bgRoot.screen.width * (bgRoot.monitor?.scale ?? 1)))
+                        height: Math.max(1, Math.round(bgRoot.screen.height * (bgRoot.monitor?.scale ?? 1)))
                     }
 
                     onTransitionStarted: {
