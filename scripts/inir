@@ -580,10 +580,17 @@ check_qs_abi() {
     echo "Quickshell was built against a different Qt version than what is installed." >&2
     echo "The shell will crash on any UI interaction until quickshell is rebuilt." >&2
 
-    # Detect-AND-fix: when interactive, offer the rebuild on the spot.
-    # That's the whole point of having a doctor — not just blame the user.
-    if [[ -t 0 && -t 1 ]] && _inir_run_quickshell_rebuild interactive; then
-        return 0
+    # Try auto-rebuild: interactive when in a terminal, noninteractive in service mode.
+    if [[ -t 0 && -t 1 ]]; then
+        if _inir_run_quickshell_rebuild interactive; then
+            return 0
+        fi
+    elif [[ "${_session_boot:-}" == "true" ]]; then
+        echo "" >&2
+        echo "Attempting automatic rebuild (service mode)..." >&2
+        if _inir_run_quickshell_rebuild noninteractive; then
+            return 0
+        fi
     fi
 
     # Auto-fix declined, unavailable, or failed — fall through to manual instructions.
