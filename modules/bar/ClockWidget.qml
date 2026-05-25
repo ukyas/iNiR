@@ -20,7 +20,7 @@ Item {
             font.pixelSize: Appearance.font.pixelSize.large
             color: Appearance.angelEverywhere ? Appearance.angel.colText
                 : Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1
-            text: DateTime.time
+            text: DateTime.timeDisplay
         }
 
         StyledText {
