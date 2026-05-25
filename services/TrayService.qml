@@ -1,6 +1,7 @@
 pragma Singleton
 
 import qs.modules.common
+import qs.modules.common.functions
 import qs.services
 import QtQuick
 import Quickshell
@@ -95,7 +96,7 @@ Singleton {
         }
         
         // No window found - launch app (use login shell for proper PATH including ~/.local/bin)
-        Quickshell.execDetached(["/usr/bin/bash", "-lc", appInfo.launch]);
+        ShellExec.execCmd(appInfo.launch);
         return true;
     }
     
@@ -143,7 +144,7 @@ Singleton {
             
             // For harmless apps (like Spotify usually), try launching to restore
             root._log(`[TrayService] Window not found for ${id}, executing launch: ${appInfo.launch}`);
-            Quickshell.execDetached(["/usr/bin/bash", "-lc", appInfo.launch]);
+            ShellExec.execCmd(appInfo.launch);
             return true;
         }
         

@@ -290,7 +290,7 @@ Singleton {
             }).filter(item => item.score > root.scoreThreshold)
               .sort((a, b) => b.score - a.score)
 
-            return results.map(item => item.entry)
+            return results.map(item => root._decorateEntry(item.entry))
         }
 
         // Hybrid approach: combine fuzzysort with smart scoring
@@ -322,7 +322,58 @@ Singleton {
             return { entry, score }
         }).sort((a, b) => b.score - a.score)
 
-        return scoredResults.map(item => item.entry)
+        return scoredResults.map(item => root._decorateEntry(item.entry))
+    }
+
+    function _decorateEntry(entry): var {
+        if (!entry) return null
+        return {
+            id: entry.id ?? "",
+            name: entry.name ?? "",
+            icon: entry.icon ?? "",
+            comment: entry.comment ?? "",
+            genericName: entry.genericName ?? "",
+            runInTerminal: entry.runInTerminal ?? false,
+            command: Array.from(entry.command ?? []),
+            originalEntry: entry,
+            execute: () => {
+                root.launchEntry(entry)
+            }
+        }
+    }
+
+    function launchEntry(entry): bool {
+        if (!entry) return false
+
+        const desktopId = String(entry.id ?? entry.originalEntry?.id ?? "").trim()
+        const displayName = String(entry.name ?? entry.originalEntry?.name ?? desktopId).trim()
+        if (desktopId.length > 0 && ShellExec.launchDesktopEntry(desktopId, displayName.length > 0 ? `Launch ${displayName}` : "")) {
+            return true
+        }
+
+        const command = Array.from(entry.command ?? entry.originalEntry?.command ?? []).map(arg => String(arg ?? "")).filter(arg => arg.length > 0)
+        if (command.length > 0) {
+            if (entry.runInTerminal ?? entry.originalEntry?.runInTerminal ?? false) {
+                const terminal = String(Config.options?.apps?.terminal ?? "kitty").trim() || "kitty"
+                const quotedCommand = command.map(arg => `'${StringUtils.shellSingleQuoteEscape(arg)}'`).join(" ")
+                if (terminal === "wezterm") {
+                    ShellExec.execCmd(`${terminal} start --always-new-process -- ${quotedCommand}`)
+                } else {
+                    ShellExec.execCmd(`${terminal} -e ${quotedCommand}`)
+                }
+                return true
+            }
+
+            ShellExec.execDetachedArgs(command, displayName.length > 0 ? `Launch ${displayName}` : "")
+            return true
+        }
+
+        if (entry.originalEntry && typeof entry.originalEntry.execute === "function") {
+            entry.originalEntry.execute()
+            return true
+        }
+
+        return false
     }
 
     function iconExists(iconName) {

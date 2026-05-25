@@ -228,8 +228,10 @@ DockButton {
             id = "spotify-launcher";
         }
         if (id && id !== "" && id !== "SEPARATOR") {
-            const cmd = "/usr/bin/gtk-launch \"" + id + "\" || \"" + id + "\" &";
-            Quickshell.execDetached(["/usr/bin/bash", "-lc", cmd]);
+            const entry = AppSearch.lookupDesktopEntry(id);
+            if (entry && AppSearch.launchEntry(entry))
+                return true;
+            ShellExec.execCmd(id);
             return true;
         }
         return false;

@@ -216,7 +216,7 @@ Singleton {
         if (!command.includes(" ") && !command.includes("/")) {
             const entry = DesktopEntries.heuristicLookup(command)
             if (entry) {
-                entry.execute()
+                AppSearch.launchEntry(entry)
                 return
             }
         }

@@ -2,6 +2,7 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 
 import qs.modules.common
+import qs.modules.common.functions
 import qs.services
 import QtQuick
 import Quickshell
@@ -42,10 +43,10 @@ Singleton {
         const command = ["/usr/bin/bash", "-lc", script + "\nprintf \"\\nPress Enter to close...\"\nread", "bash", ...(args ?? [])]
         const terminal = root._safeTerminal()
         if (terminal === "wezterm") {
-            Quickshell.execDetached([terminal, "start", "--always-new-process", "--", ...command])
+            ShellExec.execDetachedArgs([terminal, "start", "--always-new-process", "--", ...command], "Run package action")
             return
         }
-        Quickshell.execDetached([terminal, "-e", ...command])
+        ShellExec.execDetachedArgs([terminal, "-e", ...command], "Run package action")
     }
 
     function isSafePackageName(name: string): bool {

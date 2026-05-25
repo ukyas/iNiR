@@ -12,6 +12,8 @@ Singleton {
 
     readonly property string fishPath: "/usr/bin/fish"
     readonly property string bashPath: "/usr/bin/bash"
+    readonly property string systemdRunPath: "/usr/bin/systemd-run"
+    readonly property string gtkLaunchPath: "/usr/bin/gtk-launch"
 
     // -1 unknown, 0 no, 1 yes
     property int _fishAvailable: -1
@@ -37,16 +39,37 @@ Singleton {
         return root._fishAvailable === 1
     }
 
+    function execDetachedArgs(args, description = ""): void {
+        const argv = Array.from(args ?? []).map(arg => String(arg ?? "")).filter(arg => arg.length > 0)
+        if (argv.length === 0) return
+
+        const desc = String(description ?? "").trim()
+        const script = `
+            systemd_run="$1"
+            desc="$2"
+            shift 2
+            if [ -x "$systemd_run" ]; then
+                if [ -n "$desc" ]; then
+                    "$systemd_run" --user --scope --quiet --collect --property="Description=$desc" -- "$@" && exit 0
+                else
+                    "$systemd_run" --user --scope --quiet --collect -- "$@" && exit 0
+                fi
+            fi
+            exec "$@"
+        `
+        Quickshell.execDetached([root.bashPath, "-lc", script, "inir-scope", root.systemdRunPath, desc, ...argv])
+    }
+
     function execCmd(cmd: string): void {
         const c = String(cmd ?? "").trim()
         if (c.length === 0) return
 
         if (supportsFish()) {
-            Quickshell.execDetached([root.fishPath, "-c", c])
+            root.execDetachedArgs([root.fishPath, "-c", c])
             return
         }
 
-        Quickshell.execDetached([root.bashPath, "-lc", c])
+        root.execDetachedArgs([root.bashPath, "-lc", c])
     }
 
     function execFishOrBashOneLiner(fishCmd: string, bashCmd: string): void {
@@ -55,12 +78,19 @@ Singleton {
 
         if (supportsFish()) {
             if (f.length === 0) return
-            Quickshell.execDetached([root.fishPath, "-c", f])
+            root.execDetachedArgs([root.fishPath, "-c", f])
             return
         }
 
         if (b.length === 0) return
-        Quickshell.execDetached([root.bashPath, "-lc", b])
+        root.execDetachedArgs([root.bashPath, "-lc", b])
+    }
+
+    function launchDesktopEntry(desktopId: string, description = ""): bool {
+        const id = String(desktopId ?? "").trim()
+        if (id.length === 0) return false
+        root.execDetachedArgs([root.gtkLaunchPath, id], description.length > 0 ? description : `Launch ${id}`)
+        return true
     }
 
     function writeFileViaShell(path: string, content: string): void {

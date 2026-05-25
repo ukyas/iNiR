@@ -2,6 +2,7 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import qs.modules.common.functions
 import Quickshell
 import Quickshell.Io
 import qs.modules.common
@@ -209,10 +210,10 @@ Singleton {
         const command = ["/usr/bin/bash", "-lc", script + "\nprintf \"\\nPress Enter to close...\"\nread", "bash", ...(args ?? [])]
         const terminal = root._safeTerminal()
         if (terminal === "wezterm") {
-            Quickshell.execDetached([terminal, "start", "--always-new-process", "--", ...command])
+            ShellExec.execDetachedArgs([terminal, "start", "--always-new-process", "--", ...command], "Run catalog action")
             return
         }
-        Quickshell.execDetached([terminal, "-e", ...command])
+        ShellExec.execDetachedArgs([terminal, "-e", ...command], "Run catalog action")
     }
 
     function _getInstallTarget(app: var): var {
