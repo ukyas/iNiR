@@ -78,6 +78,11 @@ MouseArea {
         source: root.useSafeBlurPipeline ? "" : root._staticWallpaperPath
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
+        // Don't retain decoded pixmap in QPixmapCache after the lock surface
+        // is destroyed — wallpaper is only ever rendered while locked, and
+        // global QPixmapCache entries are one of the JSGC mapping leak vectors
+        // tracked in #163/#164.
+        cache: false
         visible: !root.wallpaperIsGif && !root.wallpaperIsVideo && !root.useSafeBlurPipeline
         
         layer.enabled: root.blurEnabled && !root.useSafeBlurPipeline
@@ -99,6 +104,8 @@ MouseArea {
         source: root.useSafeBlurPipeline && !root.wallpaperIsGif && !root.wallpaperIsVideo ? root._staticWallpaperPath : ""
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
+        // Same as backgroundWallpaper — don't retain in QPixmapCache (#163).
+        cache: false
         visible: false
         z: -2
     }
@@ -352,6 +359,7 @@ MouseArea {
         // Status row - compact indicators at top
         Loader {
             active: clockView.statusEnabled
+            asynchronous: true
             anchors {
                 top: parent.top
                 topMargin: 24
@@ -585,6 +593,7 @@ MouseArea {
             Loader {
                 id: analogClockLoader
                 active: clockView.clockStyle === "analog"
+                asynchronous: true
                 anchors.centerIn: parent
 
                 sourceComponent: Item {
@@ -630,6 +639,7 @@ MouseArea {
         // Media player widget (below clock) - only show if music is actually playing or paused
         Loader {
             id: mediaWidgetLoader
+            asynchronous: true
             active: root.showMedia &&
                     MprisController.activePlayer !== null && 
                     MprisController.activePlayer.playbackState !== MprisPlaybackState.Stopped &&
@@ -658,6 +668,7 @@ MouseArea {
                 return pos === "auto" ? "center" : pos
             }
             active: lockNotifEnabled && Notifications.list.length > 0
+            asynchronous: true
 
             anchors {
                 top: mediaWidgetLoader.active ? mediaWidgetLoader.bottom : parent.verticalCenter
@@ -955,6 +966,7 @@ MouseArea {
         // Bottom left: Weather widget
         Loader {
             active: root.showWeather && Weather.data?.temp && Weather.data.temp.length > 0
+            asynchronous: true
             visible: active
             anchors {
                 left: parent.left
@@ -1537,6 +1549,7 @@ MouseArea {
             // Battery
             Loader {
                 active: UPower.displayDevice.isLaptopBattery
+                asynchronous: true
                 visible: active
                 anchors.verticalCenter: parent.verticalCenter
                 
@@ -1586,6 +1599,7 @@ MouseArea {
             // Keyboard layout
             Loader {
                 active: typeof HyprlandXkb !== "undefined" && HyprlandXkb.currentLayoutCode.length > 0
+                asynchronous: true
                 visible: active
                 anchors.verticalCenter: parent.verticalCenter
                 

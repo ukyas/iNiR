@@ -11,8 +11,11 @@ import qs.modules.common.widgets
 import qs.modules.common.functions
 
 ContentPage {
+    id: root
     settingsPageIndex: 0
     settingsPageName: Translation.tr("Quick")
+    readonly property bool isOverlayPage: GlobalStates.settingsOverlayOpen ?? false
+    property bool quickGridLoaded: !isOverlayPage
 
     Component.onCompleted: {
         Wallpapers.load()
@@ -447,15 +450,8 @@ ContentPage {
 
                     Rectangle {
                         Layout.fillWidth: true
-                        // Dynamic height: min 120, max 400, based on content rows
-                        Layout.preferredHeight: {
-                            const itemCount = Wallpapers.folderModel?.count ?? 0
-                            if (itemCount === 0) return 120
-                            const cols = Math.max(1, Math.floor((width - 2 * Appearance.sizes.spacingSmall) / 110))
-                            const rows = Math.ceil(itemCount / cols)
-                            const cellH = ((width - 2 * Appearance.sizes.spacingSmall) / cols) * 0.67
-                            return Math.min(280, Math.max(120, rows * cellH + 2 * Appearance.sizes.spacingSmall))
-                        }
+                        Layout.preferredHeight: visible ? quickGridDeferredContent.implicitHeight + 24 : 0
+                        visible: !root.quickGridLoaded
                         radius: Appearance.rounding.normal
                         color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
                              : Appearance.inirEverywhere ? Appearance.inir.colLayer0
@@ -466,103 +462,169 @@ ContentPage {
                         border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
                                    : Appearance.inirEverywhere ? Appearance.inir.colBorder
                                    : Appearance.colors.colLayer0Border
-                        clip: true
 
-                        GridView {
-                            id: wallpaperGrid
+                        ColumnLayout {
+                            id: quickGridDeferredContent
                             anchors.fill: parent
-                            anchors.margins: Appearance.sizes.spacingSmall
-                            model: Wallpapers.folderModel
-                            Component.onCompleted: Wallpapers.generateThumbnail("large")
+                            anchors.margins: 12
+                            spacing: 10
 
-                            Connections {
-                                target: Wallpapers
-                                function onFolderChanged() {
-                                    Wallpapers.generateThumbnail("large")
-                                }
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: Translation.tr("Quick wallpaper thumbnails are deferred in overlay mode.")
+                                wrapMode: Text.WordWrap
+                                color: Appearance.colors.colOnLayer0
+                                font.pixelSize: Appearance.font.pixelSize.normal
+                                font.weight: Font.Medium
                             }
 
-                            // Responsive cell sizing - fill available width
-                            property int minCellWidth: 110
-                            property int columns: Math.max(1, Math.floor(width / minCellWidth))
-                            cellWidth: width / columns
-                            cellHeight: cellWidth * 0.67  // 3:2 aspect ratio
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: Translation.tr("Load them only when you actually need the grid. The full selector button above stays available.")
+                                wrapMode: Text.WordWrap
+                                color: Appearance.colors.colSubtext
+                                font.pixelSize: Appearance.font.pixelSize.small
+                            }
 
-                            interactive: contentHeight > height
-                            boundsBehavior: Flickable.StopAtBounds
-                            cacheBuffer: cellHeight * 2
-                            property int currentHoverIndex: -1
-                            ScrollBar.vertical: StyledScrollBar { policy: wallpaperGrid.interactive ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff }
-
-                            delegate: Item {
-                                id: delegateItem
-                                required property int index
-                                required property bool fileIsDir
-                                required property string filePath
-                                required property string fileName
-                                required property url fileUrl
-
-                                width: wallpaperGrid.cellWidth
-                                height: wallpaperGrid.cellHeight
-
-                                QuickWallpaperItem {
-                                    anchors.fill: parent
-                                    fileModelData: ({
-                                        filePath: delegateItem.filePath,
-                                        fileName: delegateItem.fileName,
-                                        fileIsDir: delegateItem.fileIsDir,
-                                        fileUrl: delegateItem.fileUrl
-                                    })
-                                    isSelected: {
-                                        if (delegateItem.fileIsDir) return false
-                                        if (multiMonitorPanel.visible && multiMonitorPanel.backdropViewActive)
-                                            return delegateItem.filePath === multiMonitorPanel.backdropPath
-                                        if (Config.options?.appearance?.wallpaperTheming?.colorsOnlyMode ?? false) {
-                                            const previewPath = Config.options?.appearance?.wallpaperTheming?.previewSourcePath ?? ""
-                                            return delegateItem.filePath === previewPath
-                                        }
-                                        const multiMon = (Config.options?.background?.multiMonitor?.enable ?? false) && multiMonitorPanel.selectedMonitor
-                                        const currentWallpaperPath = Config.options?.background?.wallpaperPath ?? ""
-                                        return delegateItem.filePath === (multiMon
-                                            ? (WallpaperListener.effectivePerMonitor[multiMonitorPanel.selectedMonitor]?.path ?? currentWallpaperPath)
-                                            : currentWallpaperPath)
-                                    }
-                                    isHovered: delegateItem.index === wallpaperGrid.currentHoverIndex
-
-                                    onEntered: wallpaperGrid.currentHoverIndex = delegateItem.index
-                                    onExited: if (wallpaperGrid.currentHoverIndex === delegateItem.index) wallpaperGrid.currentHoverIndex = -1
-                                    onActivated: {
-                                        if (delegateItem.fileIsDir) {
-                                            Wallpapers.setDirectory(delegateItem.filePath);
-                                        } else if (multiMonitorPanel.visible && multiMonitorPanel.backdropViewActive) {
-                                            const multiMon = Config.options?.background?.multiMonitor?.enable ?? false
-                                            if (multiMon && multiMonitorPanel.selectedMonitor) {
-                                                Wallpapers.updatePerMonitorBackdropConfig(delegateItem.filePath, multiMonitorPanel.selectedMonitor)
-                                            } else {
-                                                Config.setNestedValue("background.backdrop.wallpaperPath", delegateItem.filePath)
-                                            }
-                                            Config.setNestedValue("background.backdrop.useMainWallpaper", false)
-                                            Wallpapers.ensureVideoFirstFrame(delegateItem.filePath)
-                                        } else if (Config.options?.appearance?.wallpaperTheming?.colorsOnlyMode) {
-                                            Wallpapers.applyColorsOnly(delegateItem.filePath, Appearance.m3colors.darkmode)
-                                        } else {
-                                            const mon = (Config.options?.background?.multiMonitor?.enable ?? false) ? (multiMonitorPanel.selectedMonitor || "") : ""
-                                            Wallpapers.select(delegateItem.filePath, Appearance.m3colors.darkmode, mon);
-                                        }
-                                    }
-                                }
+                            RippleButtonWithIcon {
+                                buttonRadius: Appearance.rounding.full
+                                materialIcon: "image"
+                                mainText: Translation.tr("Load quick grid")
+                                onClicked: root.quickGridLoaded = true
                             }
                         }
+                    }
 
-                        // Empty state
-                        MaterialPlaceholderMessage {
-                            anchors.centerIn: parent
-                            maximumWidth: 360
-                            shown: Wallpapers.folderModel.count === 0
-                            icon: "image"
-                            text: Translation.tr("No images found")
-                            explanation: Translation.tr("Add wallpapers to this folder or choose a different location")
-                            shape: MaterialShape.Shape.Bun
+                    Item {
+                        id: quickGridHost
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: quickGridLoader.active && quickGridLoader.item ? quickGridLoader.item.implicitHeight : 0
+
+                        Loader {
+                            id: quickGridLoader
+                            anchors.fill: parent
+                            active: root.quickGridLoaded
+                            asynchronous: root.isOverlayPage
+
+                            sourceComponent: Rectangle {
+                                width: quickGridHost.width
+                                height: implicitHeight
+                                implicitHeight: {
+                                    const itemCount = Wallpapers.folderModel?.count ?? 0
+                                    if (itemCount === 0) return 120
+                                    const cols = Math.max(1, Math.floor((width - 2 * Appearance.sizes.spacingSmall) / 110))
+                                    const rows = Math.ceil(itemCount / cols)
+                                    const cellH = ((width - 2 * Appearance.sizes.spacingSmall) / cols) * 0.67
+                                    return Math.min(280, Math.max(120, rows * cellH + 2 * Appearance.sizes.spacingSmall))
+                                }
+                                radius: Appearance.rounding.normal
+                                color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                                     : Appearance.inirEverywhere ? Appearance.inir.colLayer0
+                                     : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                                     : Appearance.colors.colLayer0
+                                border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
+                                    : Appearance.inirEverywhere ? 1 : (Appearance.auroraEverywhere ? 0 : 1)
+                                border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
+                                           : Appearance.inirEverywhere ? Appearance.inir.colBorder
+                                           : Appearance.colors.colLayer0Border
+                                clip: true
+
+                                GridView {
+                                    id: wallpaperGrid
+                                    anchors.fill: parent
+                                    anchors.margins: Appearance.sizes.spacingSmall
+                                    model: Wallpapers.folderModel
+                                    Component.onCompleted: Wallpapers.generateThumbnail("large")
+
+                                    Connections {
+                                        target: Wallpapers
+                                        function onFolderChanged() {
+                                            Wallpapers.generateThumbnail("large")
+                                        }
+                                    }
+
+                                    // Responsive cell sizing - fill available width
+                                    property int minCellWidth: 110
+                                    property int columns: Math.max(1, Math.floor(width / minCellWidth))
+                                    cellWidth: width / columns
+                                    cellHeight: cellWidth * 0.67  // 3:2 aspect ratio
+
+                                    interactive: contentHeight > height
+                                    boundsBehavior: Flickable.StopAtBounds
+                                    cacheBuffer: cellHeight * 2
+                                    property int currentHoverIndex: -1
+                                    ScrollBar.vertical: StyledScrollBar { policy: wallpaperGrid.interactive ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff }
+
+                                    delegate: Item {
+                                        id: delegateItem
+                                        required property int index
+                                        required property bool fileIsDir
+                                        required property string filePath
+                                        required property string fileName
+                                        required property url fileUrl
+
+                                        width: wallpaperGrid.cellWidth
+                                        height: wallpaperGrid.cellHeight
+
+                                        QuickWallpaperItem {
+                                            anchors.fill: parent
+                                            fileModelData: ({
+                                                filePath: delegateItem.filePath,
+                                                fileName: delegateItem.fileName,
+                                                fileIsDir: delegateItem.fileIsDir,
+                                                fileUrl: delegateItem.fileUrl
+                                            })
+                                            isSelected: {
+                                                if (delegateItem.fileIsDir) return false
+                                                if (multiMonitorPanel.visible && multiMonitorPanel.backdropViewActive)
+                                                    return delegateItem.filePath === multiMonitorPanel.backdropPath
+                                                if (Config.options?.appearance?.wallpaperTheming?.colorsOnlyMode ?? false) {
+                                                    const previewPath = Config.options?.appearance?.wallpaperTheming?.previewSourcePath ?? ""
+                                                    return delegateItem.filePath === previewPath
+                                                }
+                                                const multiMon = (Config.options?.background?.multiMonitor?.enable ?? false) && multiMonitorPanel.selectedMonitor
+                                                const currentWallpaperPath = Config.options?.background?.wallpaperPath ?? ""
+                                                return delegateItem.filePath === (multiMon
+                                                    ? (WallpaperListener.effectivePerMonitor[multiMonitorPanel.selectedMonitor]?.path ?? currentWallpaperPath)
+                                                    : currentWallpaperPath)
+                                            }
+                                            isHovered: delegateItem.index === wallpaperGrid.currentHoverIndex
+
+                                            onEntered: wallpaperGrid.currentHoverIndex = delegateItem.index
+                                            onExited: if (wallpaperGrid.currentHoverIndex === delegateItem.index) wallpaperGrid.currentHoverIndex = -1
+                                            onActivated: {
+                                                if (delegateItem.fileIsDir) {
+                                                    Wallpapers.setDirectory(delegateItem.filePath);
+                                                } else if (multiMonitorPanel.visible && multiMonitorPanel.backdropViewActive) {
+                                                    const multiMon = Config.options?.background?.multiMonitor?.enable ?? false
+                                                    if (multiMon && multiMonitorPanel.selectedMonitor) {
+                                                        Wallpapers.updatePerMonitorBackdropConfig(delegateItem.filePath, multiMonitorPanel.selectedMonitor)
+                                                    } else {
+                                                        Config.setNestedValue("background.backdrop.wallpaperPath", delegateItem.filePath)
+                                                    }
+                                                    Config.setNestedValue("background.backdrop.useMainWallpaper", false)
+                                                    Wallpapers.ensureVideoFirstFrame(delegateItem.filePath)
+                                                } else if (Config.options?.appearance?.wallpaperTheming?.colorsOnlyMode) {
+                                                    Wallpapers.applyColorsOnly(delegateItem.filePath, Appearance.m3colors.darkmode)
+                                                } else {
+                                                    const mon = (Config.options?.background?.multiMonitor?.enable ?? false) ? (multiMonitorPanel.selectedMonitor || "") : ""
+                                                    Wallpapers.select(delegateItem.filePath, Appearance.m3colors.darkmode, mon);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                MaterialPlaceholderMessage {
+                                    anchors.centerIn: parent
+                                    maximumWidth: 360
+                                    shown: Wallpapers.folderModel.count === 0
+                                    icon: "image"
+                                    text: Translation.tr("No images found")
+                                    explanation: Translation.tr("Add wallpapers to this folder or choose a different location")
+                                    shape: MaterialShape.Shape.Bun
+                                }
+                            }
                         }
                     }
                 }

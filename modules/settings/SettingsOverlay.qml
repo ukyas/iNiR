@@ -22,8 +22,8 @@ Scope {
 
     property bool settingsOpen: GlobalStates.settingsOverlayOpen ?? false
 
-    // Keep alive after first open for instant re-open
-    property bool _everOpened: false
+    // Keep the overlay tree unloaded while closed; search can request preload on demand.
+    property bool _panelLoaded: settingsOpen
 
     // ── Search system (full, same as settings.qml) ──
     property string overlaySearchText: ""
@@ -514,7 +514,6 @@ Scope {
         target: GlobalStates
         function onSettingsOverlayOpenChanged() {
             if (GlobalStates.settingsOverlayOpen) {
-                root._everOpened = true
                 if (GlobalStates.settingsOverlayRequestedPage >= 0) {
                     root.overlayCurrentPage = GlobalStates.settingsOverlayRequestedPage
                     GlobalStates.settingsOverlayRequestedPage = -1
@@ -525,7 +524,7 @@ Scope {
 
     Loader {
         id: panelLoader
-        active: root._everOpened
+        active: root._panelLoaded
 
         sourceComponent: PanelWindow {
             id: settingsPanel
@@ -881,6 +880,10 @@ Scope {
                                         text: root.overlaySearchText
                                         onTextChanged: {
                                             root.overlaySearchText = text;
+                                            if (text.length > 0 && !overlayPagesStack.preloadRequested) {
+                                                overlayPagesStack.preloadRequested = true
+                                                overlayPreloadTimer.start()
+                                            }
                                             searchDebounceTimer.restart();
                                         }
 
@@ -1273,6 +1276,7 @@ Scope {
 
                                 property var visitedPages: ({})
                                 property int preloadIndex: 0
+                                property bool preloadRequested: false
 
                                 Connections {
                                     target: root
@@ -1280,7 +1284,10 @@ Scope {
                                         if (root.settingsOpen) {
                                             overlayPagesStack.visitedPages[overlayCurrentPage] = true
                                             overlayPagesStack.visitedPagesChanged()
-                                            overlayPreloadTimer.start()
+                                            if (root.overlaySearchText.length > 0 && !overlayPagesStack.preloadRequested) {
+                                                overlayPagesStack.preloadRequested = true
+                                                overlayPreloadTimer.start()
+                                            }
                                         }
                                     }
                                 }

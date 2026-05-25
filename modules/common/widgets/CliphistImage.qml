@@ -109,7 +109,8 @@ Rectangle {
         sourceComponent: GaussianBlur {
             source: image
             radius: 35
-            samples: radius * 2 + 1
+            // See #159 — cap samples to bound fragment shader cost
+            samples: Math.min(33, radius * 2 + 1)
 
             Rectangle {
                 anchors.fill: parent
