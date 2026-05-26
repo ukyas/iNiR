@@ -163,6 +163,19 @@ bind "Super+Alt+L" allow-when-locked=true { spawn "inir" "lock" "activate"; }
 
 ---
 
+### memory
+
+Memory pressure monitoring. Self-healing for JSGCHeap accumulation (Qt V4 memfd leak).
+
+| Function | Description |
+|----------|-------------|
+| `stats` | Return JSON with deleted mappings count, threshold, and reload state |
+| `collect` | Force JavaScript garbage collection |
+| `reload` | Schedule automatic restart when threshold exceeded |
+| `cancel` | Cancel scheduled restart |
+
+---
+
 ### cheatsheet
 
 Keyboard shortcuts reference. For when you forget what you just configured five minutes ago.

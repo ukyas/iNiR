@@ -2,8 +2,8 @@
 # Auto-generated from QML IpcHandler declarations + docs/IPC.md metadata.
 # Do not edit manually.
 # Regenerate: python3 scripts/lib/generate-ipc-registry.py
-# IPC.md hash: 8ba26a4cf70f8b68
-# Targets: 48
+# IPC.md hash: 981051cbd0e6b05a
+# Targets: 49
 
 declare -gA IPC_TARGET_DESC=(
   [ai]="AI chat service. Multi-provider (Gemini, OpenAI, Mistral) with tool support."
@@ -25,6 +25,7 @@ declare -gA IPC_TARGET_DESC=(
   [keyboard]="Keyboard layout switching (Niri only). Cycles through configured keyboard layouts and queries layout info."
   [lock]="Lock screen. For when you need to pretend you're working."
   [mediaControls]="Floating media controls panel."
+  [memory]="Memory pressure monitoring. Self-healing for JSGCHeap accumulation (Qt V4 memfd leak)."
   [minimize]="Window minimization (Niri workaround - moves windows to hidden workspace)."
   [mpris]="Media player control. Automatically detects and uses YtMusic controls when active, otherwise uses the active MPRIS player."
   [notifications]="Notification management."
@@ -76,6 +77,7 @@ declare -gA IPC_TARGET_FAMILY=(
   [keyboard]="shared"
   [lock]="shared"
   [mediaControls]="shared"
+  [memory]="shared"
   [minimize]="shared"
   [mpris]="shared"
   [notifications]="shared"
@@ -127,6 +129,7 @@ declare -gA IPC_TARGET_FUNCTIONS=(
   [keyboard]="switchLayout switchLayoutPrevious getCurrentLayout getLayouts"
   [lock]="activate deactivate status focus"
   [mediaControls]="toggle close open"
+  [memory]="collect stats reload cancel"
   [minimize]="minimize restore"
   [mpris]="pauseAll playPause previous next"
   [notifications]="test clearAll toggleSilent"
@@ -143,7 +146,7 @@ declare -gA IPC_TARGET_FUNCTIONS=(
   [session]="toggle close open"
   [settings]="open toggle"
   [shellUpdate]="toggle open close check performUpdate dismiss undismiss diagnose"
-  [sidebarLeft]="toggle close open"
+  [sidebarLeft]="toggle close open detach attach"
   [sidebarRight]="toggle close open"
   [taskview]="toggle close open"
   [tiling]="toggle open hide cycle showOsd promote"
@@ -205,8 +208,8 @@ declare -gA IPC_FUNCTION_DESC=(
   ["gamemode:activate"]="Force enable gamemode"
   ["gamemode:deactivate"]="Force disable gamemode"
   ["gamemode:status"]="Print current gamemode state (e.g. \`active (manual)\`, \`inactive (off)\`)"
-  ["globalActions:run"]="Execute action by ID (e.g. \`run toggle-mute\`)"
-  ["globalActions:runWithArgs"]="Execute action by ID with extra arguments (e.g. \`runWithArgs install-package vim\`)"
+  ["globalActions:run"]="Execute action by ID (e.g. \`toggle-mute\`, \`install-package vim\`)"
+  ["globalActions:runWithArgs"]=""
   ["globalActions:list"]="List all actions, optionally filtered by category"
   ["globalActions:search"]="Fuzzy search actions by name/description/keywords"
   ["globalActions:open"]="Open the overview in action mode"
@@ -221,6 +224,10 @@ declare -gA IPC_FUNCTION_DESC=(
   ["mediaControls:toggle"]="Open/close media controls"
   ["mediaControls:close"]="Hide media controls"
   ["mediaControls:open"]="Show media controls"
+  ["memory:collect"]="Force JavaScript garbage collection"
+  ["memory:stats"]="Return JSON with deleted mappings count, threshold, and reload state"
+  ["memory:reload"]="Schedule automatic restart when threshold exceeded"
+  ["memory:cancel"]="Cancel scheduled restart"
   ["minimize:minimize"]="Minimize focused window"
   ["minimize:restore"]="Restore a minimized window by ID"
   ["mpris:pauseAll"]="Pause all players"
@@ -276,6 +283,8 @@ declare -gA IPC_FUNCTION_DESC=(
   ["sidebarLeft:toggle"]="Open/close left sidebar"
   ["sidebarLeft:close"]="Hide left sidebar"
   ["sidebarLeft:open"]="Show left sidebar"
+  ["sidebarLeft:detach"]=""
+  ["sidebarLeft:attach"]=""
   ["sidebarRight:toggle"]="Open/close right sidebar"
   ["sidebarRight:close"]="Hide right sidebar"
   ["sidebarRight:open"]="Show right sidebar"
@@ -343,8 +352,7 @@ bind "Alt+Shift+Tab" { spawn "inir" "altSwitcher" "previous"; }'
   [closeConfirm]='bind "Mod+Q" repeat=false { spawn "inir" "close-window"; }'
   [gamemode]='bind "Super+F12" { spawn "inir" "gamemode" "toggle"; }'
   [globalActions]='bind "Super+Slash" { spawn "inir" "globalActions" "open"; }
-bind "Super+M" { spawn "inir" "globalActions" "run" "toggle-mute"; }
-bind "Super+Shift+M" { spawn "inir" "globalActions" "runWithArgs" "install-package" "vim"; }'
+bind "Super+M" { spawn "inir" "globalActions" "run" "toggle-mute"; }'
   [keyboard]='bind "Mod+Alt+K" { spawn "inir" "keyboard" "switchLayout"; }'
   [lock]='bind "Super+Alt+L" allow-when-locked=true { spawn "inir" "lock" "activate"; }'
   [mpris]='bind "Ctrl+Mod+Space" { spawn "inir" "mpris" "playPause"; }
@@ -363,8 +371,8 @@ bind "Super+Shift+A" { spawn "inir" "region" "search"; }'
   [ytmusic]='bind "Mod+M+Space" { spawn "inir" "ytmusic" "playPause"; }'
 )
 
-IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio background bar brightness cheatsheet clipboard cliphistService closeConfirm controlPanel coverflowSelector customWidgets gamemode globalActions keyboard lock mediaControls minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily recordingOsd region search session settings shellUpdate sidebarLeft sidebarRight taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar wnotificationCenter wwidgets ytmusic zoom)
-IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm controlPanel coverflowSelector gamemode globalActions keyboard lock mediaControls minimize mpris notifications osdVolume osk overview packageSearch panelFamily region session settings shellUpdate sidebarLeft sidebarRight tiling voiceSearch wallpaperSelector ytmusic zoom)
+IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio background bar brightness cheatsheet clipboard cliphistService closeConfirm controlPanel coverflowSelector customWidgets gamemode globalActions keyboard lock mediaControls memory minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily recordingOsd region search session settings shellUpdate sidebarLeft sidebarRight taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar wnotificationCenter wwidgets ytmusic zoom)
+IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm controlPanel coverflowSelector gamemode globalActions keyboard lock mediaControls memory minimize mpris notifications osdVolume osk overview packageSearch panelFamily region session settings shellUpdate sidebarLeft sidebarRight tiling voiceSearch wallpaperSelector ytmusic zoom)
 IPC_II_TARGETS=(overlay)
 IPC_WAFFLE_TARGETS=(background customWidgets osd recordingOsd search taskview wactionCenter waffleAltSwitcher wbar wnotificationCenter wwidgets)
 
