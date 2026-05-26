@@ -1413,6 +1413,12 @@
         "adviseUpdateThreshold": 75,
         "stronglyAdviseUpdateThreshold": 200
     },
+    "bootGreeting": {
+        "enable": true,
+        "autoDismissDelay": 5000,
+        "showWeather": true,
+        "showDate": true
+    },
     "welcomeWizard": {
         "completed": false,
         "skipped": false

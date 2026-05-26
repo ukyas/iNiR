@@ -2002,6 +2002,12 @@ Singleton {
                 // pauses on failure so the user can read the error.
                 property bool openTerminalOnUpdate: true
             }
+            property JsonObject bootGreeting: JsonObject {
+                property bool enable: true
+                property int autoDismissDelay: 5000
+                property bool showWeather: true
+                property bool showDate: true
+            }
             property JsonObject welcomeWizard: JsonObject {
                 property bool completed: false
                 property bool skipped: false

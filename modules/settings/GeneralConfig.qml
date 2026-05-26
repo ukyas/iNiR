@@ -597,6 +597,68 @@ ContentPage {
 
     SettingsCardSection {
         expanded: false
+        icon: "waving_hand"
+        title: Translation.tr("Boot greeting")
+
+        SettingsGroup {
+            SettingsSwitch {
+                buttonIcon: "waving_hand"
+                text: Translation.tr("Show greeting on startup")
+                checked: Config.options?.bootGreeting?.enable ?? true
+                onCheckedChanged: {
+                    Config.setNestedValue("bootGreeting.enable", checked);
+                }
+                StyledToolTip {
+                    text: Translation.tr("Display a fullscreen welcome screen with clock and weather when the shell starts")
+                }
+            }
+
+            SettingsDivider {}
+
+            ConfigSpinBox {
+                enabled: Config.options?.bootGreeting?.enable ?? true
+                icon: "timer"
+                text: Translation.tr("Auto-dismiss delay (ms)")
+                value: Config.options?.bootGreeting?.autoDismissDelay ?? 5000
+                from: 2000
+                to: 15000
+                stepSize: 500
+                onValueChanged: {
+                    Config.setNestedValue("bootGreeting.autoDismissDelay", value);
+                }
+                StyledToolTip {
+                    text: Translation.tr("How long to show the greeting before it fades out automatically")
+                }
+            }
+
+            SettingsDivider {}
+
+            ConfigRow {
+                uniform: true
+                SettingsSwitch {
+                    enabled: Config.options?.bootGreeting?.enable ?? true
+                    buttonIcon: "thermostat"
+                    text: Translation.tr("Show weather")
+                    checked: Config.options?.bootGreeting?.showWeather ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("bootGreeting.showWeather", checked);
+                    }
+                }
+                SettingsSwitch {
+                    enabled: Config.options?.bootGreeting?.enable ?? true
+                    buttonIcon: "calendar_today"
+                    text: Translation.tr("Show date")
+                    checked: Config.options?.bootGreeting?.showDate ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("bootGreeting.showDate", checked);
+                    }
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        expanded: false
         icon: "lock"
         title: Translation.tr("Lock screen")
 

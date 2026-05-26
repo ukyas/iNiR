@@ -1,5 +1,6 @@
 import qs.modules.background
 import qs.modules.bar
+import qs.modules.bootGreeting
 import qs.modules.cheatsheet
 import qs.modules.controlPanel
 import qs.modules.dock
@@ -58,6 +59,7 @@ Item {
     PanelLoader { identifier: "iiOnScreenDisplay"; component: OnScreenDisplay {} }
 
     // === Deferred panels (user-triggered or non-critical at boot) ===
+    DeferredPanelLoader { identifier: "iiBootGreeting"; component: BootGreeting {} }
     DeferredPanelLoader { identifier: "iiCheatsheet"; component: Cheatsheet {} }
     DeferredPanelLoader { identifier: "iiControlPanel"; component: ControlPanel {} }
     DeferredPanelLoader { identifier: "iiLock"; component: Lock {} }
