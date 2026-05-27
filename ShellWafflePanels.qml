@@ -32,17 +32,22 @@ import "."
 
 Item {
     // Immediate panels — visible at first frame or must catch early events
+    // Uses `active` which loads synchronously (required for first-frame visibility)
     component PanelLoader: LazyLoader {
         required property string identifier
         property bool extraCondition: true
         active: Config.ready && (Config.options?.enabledPanels ?? []).includes(identifier) && extraCondition
     }
 
-    // Deferred panels — loaded after first frame to reduce boot contention
+    // Deferred panels — loaded asynchronously after first frame to reduce boot contention
+    // Uses `loading` to pre-load in spare frame time, then `activeAsync` to activate without blocking
     component DeferredPanelLoader: LazyLoader {
         required property string identifier
         property bool extraCondition: true
-        active: Config.ready && GlobalStates.deferredPanelsReady && (Config.options?.enabledPanels ?? []).includes(identifier) && extraCondition
+        // Pre-load async when Config is ready (in spare frame time)
+        loading: Config.ready && (Config.options?.enabledPanels ?? []).includes(identifier) && extraCondition
+        // Activate async when deferred phase is ready (doesn't block UI)
+        activeAsync: Config.ready && GlobalStates.deferredPanelsReady && (Config.options?.enabledPanels ?? []).includes(identifier) && extraCondition
     }
 
     // === Immediate panels (first frame + early event capture) ===
@@ -76,8 +81,16 @@ Item {
     DeferredPanelLoader { identifier: "iiRecordingOsd"; component: RecordingOsd {} }
 
     // Waffle Clipboard - handles IPC when panelFamily === "waffle"
-    LazyLoader { active: Config.ready && GlobalStates.deferredPanelsReady && Config.options?.panelFamily === "waffle"; component: WaffleClipboardModule.WaffleClipboard {} }
+    LazyLoader {
+        loading: Config.ready && Config.options?.panelFamily === "waffle"
+        activeAsync: Config.ready && GlobalStates.deferredPanelsReady && Config.options?.panelFamily === "waffle"
+        component: WaffleClipboardModule.WaffleClipboard {}
+    }
 
     // Waffle AltSwitcher - handles IPC when panelFamily === "waffle"
-    LazyLoader { active: Config.ready && GlobalStates.deferredPanelsReady && Config.options?.panelFamily === "waffle"; component: WaffleAltSwitcherModule.WaffleAltSwitcher {} }
+    LazyLoader {
+        loading: Config.ready && Config.options?.panelFamily === "waffle"
+        activeAsync: Config.ready && GlobalStates.deferredPanelsReady && Config.options?.panelFamily === "waffle"
+        component: WaffleAltSwitcherModule.WaffleAltSwitcher {}
+    }
 }

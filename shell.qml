@@ -37,12 +37,19 @@ ShellRoot {
     property var _powerProfilePersistence: PowerProfilePersistence
 
     // Deferred singletons — initialized after first frame to reduce boot contention
+    // Tier 3: T+500ms (display/interaction services)
     property var _gameModeService
     property var _windowPreviewService
     property var _weatherService
     property var _voiceSearchService
     property var _fontSyncService
     property var _cavaThemeService
+    // Tier 4: T+1500ms (background features - updates, sync, content services)
+    property var _shellUpdatesService
+    property var _autostartService
+    property var _calendarSyncService
+    property var _todoService
+    property var _notepadService
 
     // Boot phase timing (ms since epoch). Written to ~/.cache/inir/last-boot.json
     // when the deferred phase finishes. `inir status` reads this back to show users
@@ -57,17 +64,23 @@ ShellRoot {
 
     Component.onCompleted: {
         root._bootCompletedAt = Date.now();
+        console.info("[Boot] T+0ms: Component.onCompleted (shell.qml ready)");
         Quickshell.watchFiles = !disableHotReload;
-        root._log("[Shell] Initializing startup-critical singletons");
+        
+        // Tier 0: startup-critical singletons (no delay)
+        root._log("[Boot] Tier 0: startup-critical singletons");
         FirstRunExperience.load();
         ConflictKiller.load();
         // Force MemoryPressureService instantiation for IPC (#164)
         void MemoryPressureService.enabled;
+        
         // Reset shell entry state (hot-reload may preserve singletons)
         GlobalStates.shellEntryReady = false;
         GlobalStates.deferredPanelsReady = false;
+        
         if (Config.ready) {
             root._bootConfigReadyAt = Date.now();
+            console.info("[Boot] T+" + (root._bootConfigReadyAt - root._bootCompletedAt) + "ms: Config.ready (immediate)");
             shellEntryTimer.start();
             deferredInitTimer.start();
         }
@@ -76,24 +89,27 @@ ShellRoot {
     // Shell entry animation: panels start hidden, slide in after a brief delay
     // 200ms is enough for LazyLoader panels to be created on warm cache;
     // on cold boot the progressive slide-in is better UX than extra blank time
+    // Tier 1-2: Implicit — UI-critical services load with panels (Audio, Battery, etc.)
     Timer {
         id: shellEntryTimer
         interval: Appearance.animationsEnabled ? 200 : 0
         repeat: false
         onTriggered: {
             if (!root._bootShellEntryAt) root._bootShellEntryAt = Date.now();
+            console.info("[Boot] T+" + (root._bootShellEntryAt - root._bootCompletedAt) + "ms: shellEntryReady (first frame)");
             GlobalStates.shellEntryReady = true;
         }
     }
 
     // Deferred initialization: load non-critical services and panels after the first frame
     // is rendered, spreading startup work over time to reduce the boot contention burst
+    // Tier 3: T+500ms — display/interaction services needed soon after first frame
     Timer {
         id: deferredInitTimer
         interval: 500
         repeat: false
         onTriggered: {
-            root._log("[Shell] Deferred init: loading non-critical services and panels");
+            root._log("[Boot] T+" + (Date.now() - root._bootCompletedAt) + "ms: Tier 3 (display/interaction)");
             root._gameModeService = GameMode;
             root._windowPreviewService = WindowPreviewService;
             root._weatherService = Weather;
@@ -108,8 +124,28 @@ ShellRoot {
             }
             if (!root._bootDeferredAt) {
                 root._bootDeferredAt = Date.now();
-                root._writeBootPhase();
             }
+            // Kick off Tier 4 loading
+            lateFeaturesTimer.start();
+        }
+    }
+
+    // Tier 4: T+1500ms — background features that can wait (updates, sync, content)
+    // These services do background work (network requests, file I/O) that doesn't affect UX
+    property real _bootLateFeaturesAt: 0
+    Timer {
+        id: lateFeaturesTimer
+        interval: 1000  // +1000ms after Tier 3 = T+1500ms total
+        repeat: false
+        onTriggered: {
+            root._log("[Boot] T+" + (Date.now() - root._bootCompletedAt) + "ms: Tier 4 (background features)");
+            root._shellUpdatesService = ShellUpdates;
+            root._autostartService = Autostart;
+            root._calendarSyncService = CalendarSync;
+            root._todoService = Todo;
+            root._notepadService = Notepad;
+            root._bootLateFeaturesAt = Date.now();
+            root._writeBootPhase();
         }
     }
 
@@ -123,6 +159,14 @@ ShellRoot {
             configReadyAt: Math.floor(root._bootConfigReadyAt),
             shellEntryAt: Math.floor(root._bootShellEntryAt),
             deferredReadyAt: Math.floor(root._bootDeferredAt),
+            lateFeaturesAt: Math.floor(root._bootLateFeaturesAt),
+            // Deltas for easier analysis
+            deltas: {
+                configReady: Math.floor(root._bootConfigReadyAt - root._bootCompletedAt),
+                shellEntry: Math.floor(root._bootShellEntryAt - root._bootConfigReadyAt),
+                deferred: Math.floor(root._bootDeferredAt - root._bootShellEntryAt),
+                lateFeatures: Math.floor(root._bootLateFeaturesAt - root._bootDeferredAt)
+            },
             shellPid: 0,
             writtenAt: Math.floor(Date.now())
         };
@@ -139,8 +183,11 @@ ShellRoot {
         target: Config
         function onReadyChanged() {
             if (Config.ready) {
-                if (!root._bootConfigReadyAt) root._bootConfigReadyAt = Date.now();
-                root._log("[Shell] Config ready, applying theme");
+                if (!root._bootConfigReadyAt) {
+                    root._bootConfigReadyAt = Date.now();
+                    console.info("[Boot] T+" + (root._bootConfigReadyAt - root._bootCompletedAt) + "ms: Config.ready (async)");
+                }
+                root._log("[Boot] Applying theme and icon theme");
                 Qt.callLater(() => ThemeService.applyCurrentTheme());
                 Qt.callLater(() => IconThemeService.ensureInitialized());
                 // Kick off shell entry animation after panels have been created
@@ -270,14 +317,16 @@ ShellRoot {
     LazyLoader { active: Config.ready; component: AltSwitcher {} }
 
     // Load ONLY the active family panels to reduce startup time.
+    // Using `source:` instead of `component:` to avoid parsing inactive family at compile time.
+    // This saves ~135 file parses when using ii family (waffle not parsed) and vice versa.
     LazyLoader {
         active: Config.ready && (Config.options?.panelFamily ?? "ii") !== "waffle"
-        component: ShellIiPanels { }
+        source: "ShellIiPanels.qml"
     }
 
     LazyLoader {
         active: Config.ready && (Config.options?.panelFamily ?? "ii") === "waffle"
-        component: ShellWafflePanels { }
+        source: "ShellWafflePanels.qml"
     }
 
     // Close confirmation dialog (always loaded, handles IPC)
@@ -389,10 +438,14 @@ ShellRoot {
         GlobalStates.familyTransitionActive = false
     }
 
-    // Family transition overlay
-    FamilyTransitionOverlay {
-        onExitComplete: root.applyPendingFamily()
-        onEnterComplete: root.finishFamilyTransition()
+    // Family transition overlay - lazy loaded to avoid parsing waffle on startup
+    Loader {
+        active: Config.ready
+        source: "FamilyTransitionOverlay.qml"
+        onLoaded: {
+            item.exitComplete.connect(root.applyPendingFamily)
+            item.enterComplete.connect(root.finishFamilyTransition)
+        }
     }
 
     IpcHandler {
