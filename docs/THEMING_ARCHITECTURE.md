@@ -99,4 +99,4 @@ The intended next improvements are:
 - migrate target consumers from compatibility files toward the explicit generated contracts
 - cleaner separation between `generate`, `apply`, and `reload`
 
-A compiled-language migration (Go themegen) is partially in place for some targets. See `scripts/colors/system24_themegen/` for the current Go generator.
+A compiled-language migration (Go themegen) is in place for some editor targets: the Go sources live in `scripts/colors/{opencode,vscode,zed}_themegen/` (built on demand, with Python `theme_generator.py` fallbacks if Go is unavailable). System24 theming is handled by `scripts/colors/system24_palette.sh`, not a Go binary.

@@ -218,11 +218,11 @@ By default, confirmation is disabled (closes immediately). Enable it in settings
 
 ### settings
 
-Open the settings window. GUI config so you don't have to edit JSON like it's 2005.
+Open or toggle the settings window. GUI config so you don't have to edit JSON by hand.
 
 | Function | Description |
 |----------|-------------|
-| `open` | Open settings window |
+| `open` | Open the settings window |
 | `toggle` | Toggle settings (overlay mode toggles, window mode opens) |
 
 ```kdl
@@ -233,7 +233,7 @@ bind "Super+Comma" { spawn "inir" "settings"; }
 
 ### settingsNav
 
-Navigate the settings overlay to a specific page (same as clicking the nav rail).
+Navigate the settings overlay to a specific page (same as clicking the nav rail). Opening the window itself is the `inir settings` CLI command (target `settings` above).
 
 | Function | Description |
 |----------|-------------|
@@ -379,17 +379,6 @@ Volume and mute control.
 | `volumeDown` | Decrease volume |
 | `mute` | Toggle speaker mute |
 | `micMute` | Toggle microphone mute |
-
----
-
-### zoom
-
-Screen zoom. Accessibility feature, or for reading tiny text without squinting.
-
-| Function | Description |
-|----------|-------------|
-| `zoomIn` | Increase zoom level |
-| `zoomOut` | Decrease zoom level |
 
 ---
 
@@ -748,6 +737,7 @@ Screen recording floating pill OSD. Shows elapsed time and stop button during ac
 
 ---
 
+
 ## Standalone Commands
 
 These are top-level `inir` commands that work directly, without going through IPC.
@@ -761,3 +751,4 @@ bind "Super+Shift+C" { spawn "inir" "colorpicker"; }
 ```
 
 Requires `hyprpicker` installed.
+

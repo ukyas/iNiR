@@ -85,7 +85,8 @@ This gives you:
 
 ```bash
 inir service install
-systemctl --user enable --now inir.service
+inir service enable
+inir service start
 ```
 
 ### 5. Restart Niri

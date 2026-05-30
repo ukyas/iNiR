@@ -37,7 +37,7 @@ When DND is on, new notifications still arrive and get stored in history. They j
 Notifications persist across shell restarts. History is stored at:
 
 ```
-~/.config/illogical-impulse/notifications.json
+~/.local/state/user/notifications.json
 ```
 
 View history in the right sidebar (ii) or notification center (waffle). Notifications are grouped by app name for easier scanning.
@@ -69,8 +69,7 @@ Popups appear at the bottom-right (Windows 11 style). The notification center (`
 ## IPC
 
 ```bash
-inir notifications list              # List current notifications
-inir notifications discardAll        # Clear all
+inir notifications clearAll          # Clear all notifications
 inir notifications toggleSilent      # Toggle DND
 ```
 

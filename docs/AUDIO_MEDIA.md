@@ -33,9 +33,8 @@ If EasyEffects is installed, iNiR detects its virtual sink and controls the phys
 ```bash
 inir audio volumeUp         # Increase volume
 inir audio volumeDown       # Decrease volume
-inir audio toggleMute       # Toggle mute
-inir audio toggleMicMute    # Toggle mic mute
-inir audio getVolume        # Get current volume (0.0-1.0)
+inir audio mute             # Toggle output mute
+inir audio micMute          # Toggle mic mute
 ```
 
 ## Media players

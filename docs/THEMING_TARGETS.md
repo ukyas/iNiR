@@ -147,7 +147,10 @@ The scaffold refuses to overwrite existing files.
 - `chrome`
 - `spicetify`
 - `sddm`
-- `steam` — Adwaita-for-Steam Material You CSS
+- `steam` — Material You colors via Millennium Material-Theme
+- `cava`
+- `pear-desktop`
+- `zed`
 
 Current declared input model:
 
