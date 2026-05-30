@@ -558,6 +558,11 @@ Scope {
                 }
             }
 
+            Shortcut {
+                sequences: [StandardKey.Find, "Ctrl+F"]
+                onActivated: if (typeof overlaySearchField !== "undefined" && overlaySearchField) overlaySearchField.forceActiveFocus()
+            }
+
             // Focus grab for Hyprland
             CompositorFocusGrab {
                 id: grab
@@ -610,8 +615,8 @@ Scope {
             Rectangle {
                 id: settingsCard
 
-                readonly property real maxCardWidth: Math.min(1100, settingsPanel.width * 0.88)
-                readonly property real maxCardHeight: Math.min(850, settingsPanel.height * 0.88)
+                readonly property real maxCardWidth: Math.min(1100, Math.max(820, settingsPanel.width * 0.7))
+                readonly property real maxCardHeight: Math.min(840, Math.max(600, settingsPanel.height * 0.82))
                 readonly property real panelBgOpacity: Config.options?.settingsUi?.overlayAppearance?.backgroundOpacity ?? 1.0
 
                 anchors.centerIn: parent
@@ -1032,7 +1037,7 @@ Scope {
                         Rectangle {
                             id: navColumn
                             Layout.fillHeight: true
-                            Layout.preferredWidth: 160
+                            Layout.preferredWidth: 150
                             radius: Appearance.rounding.normal
                             color: "transparent"
 
@@ -1067,7 +1072,7 @@ Scope {
                                             // ── Category header ──
                                             Item {
                                                 width: parent.width
-                                                height: visible ? (navItem.index > 0 ? 28 : 20) : 0
+                                                height: visible ? (navItem.index > 0 ? 24 : 14) : 0
                                                 visible: navItem.modelData.type === "header"
 
                                                 Rectangle {
@@ -1104,7 +1109,7 @@ Scope {
                                                 id: navBtn
                                                 visible: navItem.modelData.type === "page"
                                                 width: parent.width
-                                                implicitHeight: visible ? 38 : 0
+                                                implicitHeight: visible ? 34 : 0
 
                                                 readonly property int pageRealIndex: navItem.modelData.realIndex !== undefined ? navItem.modelData.realIndex : navItem.index
 
@@ -1207,7 +1212,7 @@ Scope {
                                             var btn = item.children[1]; // navBtn is second child
                                             if (btn && btn.visible) {
                                                 var pos = btn.mapToItem(navColumn, 0, 0);
-                                                targetY = pos.y + (btn.height - 18) / 2;
+                                                targetY = pos.y + (btn.height - 16) / 2;
                                                 hasTarget = true;
                                                 return;
                                             }
@@ -1217,7 +1222,7 @@ Scope {
                                 }
 
                                 y: targetY
-                                height: hasTarget ? 18 : 0
+                                height: hasTarget ? 16 : 0
                                 opacity: hasTarget ? 1 : 0
 
                                 Behavior on y {
