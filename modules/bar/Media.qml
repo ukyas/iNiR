@@ -259,18 +259,69 @@ Item {
             }
         }
 
-        StyledText {
+        Item {
+            id: titleScroller
             visible: Config.options?.bar?.verbose ?? true
-            width: rowLayout.width - (CircularProgress.size + rowLayout.spacing * 2)
             Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: true
             Layout.rightMargin: rowLayout.spacing
-            horizontalAlignment: Text.AlignHCenter
-            elide: Text.ElideRight
-            color: Appearance.inirEverywhere ? Appearance.inir.colText
-                : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer0
-                : Appearance.colors.colOnLayer1
-            text: `${cleanedTitle}${activePlayer?.trackArtist ? ' • ' + activePlayer.trackArtist : ''}`
+            implicitWidth: titleText.implicitWidth
+            implicitHeight: titleText.implicitHeight
+            clip: true
+
+            readonly property string fullText: `${cleanedTitle}${activePlayer?.trackArtist ? ' • ' + activePlayer.trackArtist : ''}`
+            readonly property bool overflowing: titleText.implicitWidth > width + 1
+            readonly property real scrollDistance: Math.max(0, titleText.implicitWidth - width)
+
+            // Reset x to 0 whenever the marquee should be parked. Covers the
+            // overflow→fit transition (where SequentialAnimation on x would
+            // otherwise leave x at the last animated offset) and the text
+            // change case in one place.
+            onOverflowingChanged: if (!overflowing) titleText.x = 0
+
+            StyledText {
+                id: titleText
+                height: parent.height
+                verticalAlignment: Text.AlignVCenter
+                // Centered when it fits; scrolls (marquee) when it overflows.
+                horizontalAlignment: titleScroller.overflowing ? Text.AlignLeft : Text.AlignHCenter
+                width: titleScroller.overflowing ? implicitWidth : parent.width
+                elide: Text.ElideNone
+                color: Appearance.inirEverywhere ? Appearance.inir.colText
+                    : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer0
+                    : Appearance.colors.colOnLayer1
+                text: titleScroller.fullText
+                x: 0
+                opacity: 1
+                onTextChanged: {
+                    if (!titleScroller.overflowing) x = 0
+                    // Restart the marquee from a known state so a new song
+                    // doesn't pick up the previous song's slide position.
+                    if (marqueeLoop.running) marqueeLoop.restart()
+                }
+            }
+
+            // One-way ticker: hold at start so the user can read the song,
+            // glide left at constant speed, hold at end, then fade-snap back to
+            // start (no slow back-slide). Feels much closer to a system tray
+            // marquee than a ping-pong panning animation.
+            SequentialAnimation {
+                id: marqueeLoop
+                running: titleScroller.overflowing && Appearance.animationsEnabled
+                loops: Animation.Infinite
+                onStopped: { titleText.x = 0; titleText.opacity = 1 }
+                PauseAnimation { duration: 1800 }
+                NumberAnimation {
+                    target: titleText; property: "x"
+                    to: -titleScroller.scrollDistance
+                    duration: Math.max(1500, titleScroller.scrollDistance * 22)
+                    easing.type: Easing.Linear
+                }
+                PauseAnimation { duration: 1100 }
+                NumberAnimation { target: titleText; property: "opacity"; to: 0; duration: 200; easing.type: Easing.OutQuad }
+                PropertyAction { target: titleText; property: "x"; value: 0 }
+                NumberAnimation { target: titleText; property: "opacity"; to: 1; duration: 240; easing.type: Easing.InQuad }
+            }
         }
 
     }
