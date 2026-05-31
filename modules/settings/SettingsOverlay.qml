@@ -1431,21 +1431,43 @@ Scope {
                                     onTriggered: {
                                         overlayPagesStack.visitedPages[overlayCurrentPage] = true
                                         overlayPagesStack.visitedPagesChanged()
+                                        adjacentLoadTimer.start()
+                                    }
+                                }
+
+                                // Preload the immediate neighbours shortly after the current
+                                // page is shown, so the first left/right navigation is instant
+                                // without blocking the initial render.
+                                Timer {
+                                    id: adjacentLoadTimer
+                                    interval: 180
+                                    onTriggered: {
+                                        const cur = overlayCurrentPage
+                                        const n = overlayPages.length
+                                        if (cur + 1 < n) overlayPagesStack.visitedPages[cur + 1] = true
+                                        if (cur - 1 >= 0) overlayPagesStack.visitedPages[cur - 1] = true
+                                        overlayPagesStack.visitedPagesChanged()
                                     }
                                 }
 
                                 Component.onCompleted: {
+                                    // Only load the current page on open. The full background
+                                    // preload (all 16 heavy pages ~22k lines of QML) used to start
+                                    // here and saturated the render thread, making every page
+                                    // navigation slow. It now starts lazily — only when the user
+                                    // actually types in search (see overlaySearchField.onTextChanged),
+                                    // so opening and browsing Settings stays snappy.
                                     initialLoadTimer.start()
-                                    overlayPreloadTimer.start()
                                 }
 
                                 Timer {
                                     id: overlayPreloadTimer
-                                    interval: 100
+                                    // Idle, one page per tick so search-index preload never
+                                    // competes with active navigation.
+                                    interval: 220
                                     repeat: true
                                     onTriggered: {
-                                        // Load 2 pages per tick for faster indexing
-                                        for (var i = 0; i < 2 && overlayPagesStack.preloadIndex < overlayPages.length; i++) {
+                                        for (var i = 0; i < 1 && overlayPagesStack.preloadIndex < overlayPages.length; i++) {
                                             if (!overlayPagesStack.visitedPages[overlayPagesStack.preloadIndex]) {
                                                 overlayPagesStack.visitedPages[overlayPagesStack.preloadIndex] = true
                                                 overlayPagesStack.visitedPagesChanged()
