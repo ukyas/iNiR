@@ -555,13 +555,52 @@ Item {
         implicitHeight: contentHeight
         interactive: false // Dock should never flick/scroll — all items visible
 
+        // Container resizes organically as apps enter/leave; the orientation-aware
+        // delegate transitions below grow/shrink each item in place so the dock
+        // never jump-cuts when an app opens or closes.
         Behavior on implicitWidth {
             enabled: Appearance.animationsEnabled
-            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+            animation: NumberAnimation { duration: Appearance.animation.elementResize.duration; easing.type: Appearance.animation.elementResize.type; easing.bezierCurve: Appearance.animation.elementResize.bezierCurve }
         }
         Behavior on implicitHeight {
             enabled: Appearance.animationsEnabled
-            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+            animation: NumberAnimation { duration: Appearance.animation.elementResize.duration; easing.type: Appearance.animation.elementResize.type; easing.bezierCurve: Appearance.animation.elementResize.bezierCurve }
+        }
+
+        // ─── Orientation-aware item transitions (override StyledListView's
+        //     vertical-only defaults). New apps grow in from their origin,
+        //     removed apps shrink out in place, neighbours glide along the
+        //     dock axis. Movement is suppressed during a manual reorder drag
+        //     so it never fights the drag transforms. ───
+        readonly property bool _animOk: Appearance.animationsEnabled && !root.dragActive
+
+        add: Transition {
+            enabled: listView._animOk
+            NumberAnimation { properties: "opacity,scale"; from: 0; to: 1; duration: Appearance.animation.elementMoveEnter.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Appearance.animationCurves.emphasizedDecel }
+        }
+        remove: Transition {
+            enabled: listView._animOk
+            NumberAnimation { properties: "opacity,scale"; to: 0; duration: Appearance.animation.elementMoveExit.duration; easing.type: Appearance.animation.elementMoveExit.type; easing.bezierCurve: Appearance.animation.elementMoveExit.bezierCurve }
+        }
+        displaced: Transition {
+            enabled: listView._animOk
+            NumberAnimation { properties: "x,y"; duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
+        }
+        addDisplaced: Transition {
+            enabled: listView._animOk
+            NumberAnimation { properties: "x,y"; duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
+        }
+        removeDisplaced: Transition {
+            enabled: listView._animOk
+            NumberAnimation { properties: "x,y"; duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
+        }
+        move: Transition {
+            enabled: listView._animOk
+            NumberAnimation { properties: "x,y"; duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
+        }
+        moveDisplaced: Transition {
+            enabled: listView._animOk
+            NumberAnimation { properties: "x,y"; duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
         }
 
         model: ScriptModel {
