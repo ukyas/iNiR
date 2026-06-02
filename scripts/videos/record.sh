@@ -525,10 +525,17 @@ for ((i=0;i<${#ARGS[@]};i++)); do
         FULLSCREEN_FLAG=1
     fi
 done
-
 if pgrep wf-recorder > /dev/null; then
     if is_truthy "$SHOW_NOTIFICATIONS"; then notify-send "Recording Stopped" "Stopped" -a 'Recorder' & fi
     pkill wf-recorder &
+    
+    # Hook para o Editor de Vídeo: espera o arquivo fechar, acha o mais recente e abre a UI
+    sleep 1.5
+    LATEST_FILE=$(ls -1t "$SAVE_PATH" | grep -E '\.(mp4|mkv|flv|mov)$' | head -1)
+    if [[ -n "$LATEST_FILE" ]]; then
+        /usr/bin/quickshell -c inir ipc call launchVideoEditor handle "$SAVE_PATH/$LATEST_FILE"
+    fi
+    exit 0
 else
     output_base="$(date +"$RECORDING_NAME_FORMAT")"
     output_file="./${output_base}.mp4"

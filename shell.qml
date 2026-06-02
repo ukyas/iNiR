@@ -304,7 +304,15 @@ ShellRoot {
         function toggle(): void {
             open()
         }
+      }
+
+    IpcHandler {
+    target: "launchVideoEditor"
+    function handle(path: string): void {
+        GlobalStates.videoEditorPath = path
+        GlobalStates.videoEditorPopupOpen = true
     }
+}
 
     // Settings overlay panel (loaded only when overlay mode is enabled)
     LazyLoader {
@@ -322,7 +330,7 @@ ShellRoot {
     LazyLoader {
         active: Config.ready && (Config.options?.panelFamily ?? "ii") !== "waffle"
         source: "ShellIiPanels.qml"
-    }
+      }
 
     LazyLoader {
         active: Config.ready && (Config.options?.panelFamily ?? "ii") === "waffle"
@@ -332,6 +340,9 @@ ShellRoot {
     // Close confirmation dialog (always loaded, handles IPC)
     LazyLoader { active: Config.ready; component: CloseConfirm {} }
 
+// Video Editor
+    LazyLoader { active: Config.ready; source: "modules/videoEditor/VideoEditorPopup.qml" }
+    LazyLoader { active: Config.ready; source: "modules/videoEditor/VideoEditor.qml" }
     // Shared (always loaded via ToastManager)
     ToastManager {}
 
