@@ -164,7 +164,7 @@ Item { // Notification item area
                 implicitHeight: summaryText.implicitHeight
                 StyledText {
                     id: summaryText
-                    Layout.fillWidth: summaryTextMetrics.width >= summaryRow.implicitWidth * root.summaryElideRatio
+                    Layout.fillWidth: summaryTextMetrics.width >= contentColumn.width * root.summaryElideRatio
                     visible: !root.onlyNotification
                     font.pixelSize: root.fontSize
                     color: Appearance.colors.colOnLayer3
@@ -212,7 +212,7 @@ Item { // Notification item area
                     textFormat: Text.RichText
                     text: {
                         if (!root.notificationObject) return ""
-                        return `<style>img{max-width:${expandedContentColumn.width}px;}</style>` +
+                        return `<style>img{max-width:100%;}</style>` +
                             `${NotificationUtils.processNotificationBody(notificationObject.body, notificationObject.appName || notificationObject.summary).replace(/\n/g, "<br/>")}`
                     }
 
