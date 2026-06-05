@@ -32,6 +32,7 @@ Release with the new bar layout, Screen Time, World Clock, better settings, and 
 - Fixed notification layout/polish loops and clipboard copying in ii notification popups.
 - Fixed bar active-window titles resizing center modules.
 - Fixed dock previews and taskbar previews using `file://` icon paths correctly.
+- Fixed SongRec discarding successful recognition results from newer compact JSON output.
 - Fixed doctor/ABI rebuild paths that could hang or leave vague advice.
 - Fixed BottomWidgetGroup and compact sidebar preload/height issues.
 - Fixed media popup placeholder binding loop.
