@@ -18,83 +18,23 @@ When a preset is active, changing wallpapers changes the background image but do
 
 ## Preset catalog
 
-### Signature
+The full, current list of presets lives in `modules/common/ThemePresets.qml` and drifts as presets are added or renamed. Get the live list instead of trusting a copy here:
 
-| Preset | Description |
-|--------|-------------|
-| **Angel** | Celestial twilight. Warm golden halos against deep cosmic void. The iNiR signature theme. |
-| **Angel Light** | Ethereal dawn variant. Warm cream surfaces with golden accents. |
+```bash
+grep -oP '^\s*id:\s*"\K[^"]+' modules/common/ThemePresets.qml | grep -vE '^(auto|custom)$'
+```
 
-### Catppuccin
-
-| Preset | Description |
-|--------|-------------|
-| **Catppuccin Mocha** | Dark. Warm purple-blue with pastel accents. |
-| **Catppuccin Macchiato** | Medium-dark. Slightly warmer than Mocha. |
-| **Catppuccin Frappe** | Medium. Muted blue-grey. |
-| **Catppuccin Latte** | Light. Cream base with soft pastels. |
-
-### Gruvbox
-
-| Preset | Description |
-|--------|-------------|
-| **Gruvbox Dark** | The classic warm retro palette. Orange/yellow accents on dark brown. |
-| **Gruvbox Material** | Gruvbox colors adapted to Material Design surfaces. |
-
-### Japanese-inspired
-
-| Preset | Description |
-|--------|-------------|
-| **Kanagawa** | The Great Wave. Deep blues with warm highlights. |
-| **Kanagawa Dragon** | Darker Kanagawa variant with stronger contrasts. |
-| **Tokyo Night** | Neon city. Cool blues with warm purple accents. |
-| **Sakura** | Cherry blossom pink on dark surfaces. |
-| **Samurai** | Deep crimson and black. Disciplined, sharp. |
-| **Zen Garden** | Muted earth tones. Stone, moss, bamboo. |
-
-### Classic
-
-| Preset | Description |
-|--------|-------------|
-| **Nord** | Arctic. Cool blue-grey palette from the Nord project. |
-| **Dracula** | Purple-centric dark theme. A classic. |
-| **Solarized Dark** | Ethan Schoonover's carefully crafted palette. |
-| **One Dark** | Atom editor's signature dark theme. |
-| **Monokai** | The Sublime Text classic. Warm highlights on dark. |
-| **Rose Pine** | Soft, muted pastels. Natural and calming. |
-| **Rose Pine Moon** | Darker Rose Pine variant. |
-
-### Modern
-
-| Preset | Description |
-|--------|-------------|
-| **GitHub Dark** | GitHub's dark mode palette. Clean, neutral. |
-| **Vercel** | Monochrome with blue accents. Minimal and modern. |
-| **Material Ocean** | Deep ocean blue Material Design variant. |
-| **Palenight** | Soft purple-blue. Calm and easy on the eyes. |
-| **Everforest** | Green-focused. Natural, forest-inspired. |
-| **Ayu Dark** | Warm grey with orange accents. |
-| **Ayu Mirage** | Medium-dark Ayu variant. Softer contrasts. |
-| **Ayu Light** | Light Ayu variant. |
-
-### Special
-
-| Preset | Description |
-|--------|-------------|
-| **Synthwave '84** | Retro neon. Hot pink and cyan on dark purple. |
-| **Matrix** | Green terminal aesthetic on black. Exactly what you think. |
-| **Moonlight** | Cool purple moonlit palette. |
-| **Night Owl** | Sarah Drasner's dark theme. Rich blues. |
-| **Vitesse** | Anthony Fu's theme. Muted, elegant. |
-| **Poimandres** | Deep purple-blue with mint accents. |
+At time of writing there are 44 theme presets (plus the special `auto` and `custom` entries), spanning Catppuccin (4 flavors), Gruvbox, Nord, Dracula, Tokyo Night, Kanagawa, Rose Pine, Everforest, Solarized, Monokai, Ayu, the iNiR signature styles (Angel / Angel Light), and many more. Preset IDs are kebab-case (e.g. `rose-pine`, `gruvbox-dark`, `tokyo-night`, `one-dark`) — use the ID, not a display name, when scripting.
 
 ## Preset features
 
-Some presets include metadata that affects more than just colors:
+Some presets include metadata that affects more than just colors (all defined per-preset in `modules/common/ThemePresets.qml`):
 
-- **Rounding scale**: multiplier for corner rounding (Zen Garden uses larger rounding for a softer feel)
-- **Font style**: some presets override the default font (mono for Matrix, serif for certain Japanese themes)
-- **Border width**: Angel uses thinner borders by default
+- **Rounding scale** (`roundingScale`): multiplier for corner rounding. Varies widely — e.g. Matrix uses a tighter scale, Zen Garden a softer/larger one.
+- **Font style** (`fontStyle`): `mono`, `serif`, or `sans` override. Used by many presets (most terminal/retro themes are `mono`, Angel is `serif`, etc.).
+- **Border width** (`borderWidthScale`): a handful of presets tune border thickness (e.g. Matrix thicker, some lighter).
+
+Don't rely on the exact value for a given preset — read the preset's `meta` block in `ThemePresets.qml`.
 
 ## Variant system
 

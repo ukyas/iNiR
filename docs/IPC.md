@@ -218,15 +218,31 @@ By default, confirmation is disabled (closes immediately). Enable it in settings
 
 ### settings
 
-Open the settings window. GUI config so you don't have to edit JSON like it's 2005.
+Open or toggle the settings window. GUI config so you don't have to edit JSON by hand.
 
 | Function | Description |
 |----------|-------------|
-| `open` | Open settings window |
+| `open` | Open the settings window |
 | `toggle` | Toggle settings (overlay mode toggles, window mode opens) |
 
 ```kdl
 bind "Super+Comma" { spawn "inir" "settings"; }
+```
+
+---
+
+### settingsNav
+
+Navigate the settings overlay to a specific page (same as clicking the nav rail). Opening the window itself is the `inir settings` CLI command (target `settings` above).
+
+| Function | Description |
+|----------|-------------|
+| `page(index)` | Open the overlay and jump to page `index` |
+| `count` | Number of settings pages |
+| `current` | Current page index |
+
+```sh
+inir ipc settingsNav page 5
 ```
 
 ---
@@ -363,17 +379,6 @@ Volume and mute control.
 | `volumeDown` | Decrease volume |
 | `mute` | Toggle speaker mute |
 | `micMute` | Toggle microphone mute |
-
----
-
-### zoom
-
-Screen zoom. Accessibility feature, or for reading tiny text without squinting.
-
-| Function | Description |
-|----------|-------------|
-| `zoomIn` | Increase zoom level |
-| `zoomOut` | Decrease zoom level |
 
 ---
 
@@ -587,6 +592,17 @@ bind "Mod+Alt+K" { spawn "inir" "keyboard" "switchLayout"; }
 
 ---
 
+### zoom
+
+Screen zoom. Accessibility feature, or for reading tiny UI without pretending your monitor is the problem.
+
+| Function | Description |
+|----------|-------------|
+| `zoomIn` | Increase compositor zoom |
+| `zoomOut` | Decrease compositor zoom |
+
+---
+
 ## Waffle-Specific Targets
 
 These targets only work when using the Waffle (Windows 11) panel style.
@@ -707,6 +723,16 @@ Custom widget management. Create, list, reload, and remove user-installed widget
 | `list` | List all discovered custom widgets (JSON output) |
 | `create` | Create a new widget scaffold in the widgets directory |
 | `remove` | Remove a custom widget by ID |
+
+---
+
+### widgetpower
+
+Desktop-widget power management (pauses widget rendering on game mode, fullscreen, present windows, or edit mode). Service: `services/WidgetPowerManager.qml`.
+
+| Function | Description |
+|----------|-------------|
+| `status` | Returns JSON: `enabled`, `widgetsActive`, and the active `triggers` (gameMode, fullscreen, windowsPresent, editMode) |
 
 ---
 

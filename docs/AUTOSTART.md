@@ -45,12 +45,7 @@ iNiR has its own autostart manager that handles:
 - **Custom commands**: user-defined commands configured through Settings
 - **Systemd units**: user-level systemd services
 
-Manage autostart from Settings > System > Autostart, or via IPC:
-
-```bash
-inir autostart list        # list all entries
-inir autostart toggle <id> # enable/disable an entry
-```
+Manage autostart entries from Settings > System > Autostart (there is no CLI for this — it is managed through the settings UI, backed by `services/Autostart.qml`).
 
 ## Lock screen
 
@@ -105,9 +100,6 @@ Idle timeouts are handled by swayidle, configured through Settings or IPC:
 - **Lock**: lock the session after inactivity (default: 10 minutes)
 - **Suspend**: suspend the system after inactivity (default: off)
 
-```bash
-inir idle getTimeouts    # current timeout values
-inir idle inhibit        # prevent idle actions temporarily
-```
+Idle timeouts are configured in Settings (backed by `services/Idle.qml`); there is no `inir idle` CLI command.
 
 Fullscreen video players and presentations automatically inhibit idle via the idle-inhibit Wayland protocol.

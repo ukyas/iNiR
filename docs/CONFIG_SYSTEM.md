@@ -60,7 +60,7 @@ The direct assignment updates the in-memory QML property but never writes to dis
 
 ### Schema
 
-`Config.qml` is a 1385+ line singleton that defines every config section as typed QML properties. Example:
+`Config.qml` is a large singleton that defines every config section as typed QML properties. Example:
 
 ```qml
 readonly property QtObject bar: QtObject {
@@ -80,7 +80,7 @@ The schema serves three purposes:
 
 ### Defaults
 
-`defaults/config.json` provides the starting config for fresh installs. It currently has 1100+ lines covering 51 top-level sections.
+`defaults/config.json` provides the starting config for fresh installs. It covers ~60 top-level sections.
 
 The defaults file and Config.qml can have different fallback values by design. The defaults file is what gets written to disk on first install. The schema fallbacks are what the code uses if a key is missing at runtime.
 
@@ -90,11 +90,11 @@ Config uses Quickshell's `FileView` with `watchChanges: true`. External edits (f
 
 ### The configChanged signal
 
-After `setNestedValue` writes to disk, `Config.configChanged()` fires. Components that need to react to config changes (beyond just re-reading a property) can connect to this signal.
+`setNestedValue` emits `Config.configChanged()` **immediately**, in the same call — before the debounced 50 ms disk write actually happens. So the signal reflects the new in-memory value, not a confirmed write to disk. Components that need to react to config changes (beyond just re-reading a property) can connect to this signal.
 
 ## Config sections
 
-The 51 top-level sections, roughly grouped:
+The ~60 top-level sections, roughly grouped:
 
 **Shell structure**: `panelFamily`, `enabledPanels`, `bar`, `dock`, `sidebar`
 
@@ -109,6 +109,66 @@ The 51 top-level sections, roughly grouped:
 **Waffle-specific**: `waffles` (the entire waffle family config namespace)
 
 The full schema is `modules/common/Config.qml`. The full defaults are `defaults/config.json`.
+
+## Common keys people actually ask about
+
+### Bar layout
+
+`bar.layout` controls the modular ii bar:
+
+- `left`
+- `centerLeft`
+- `center`
+- `centerRight`
+- `right`
+- `migrated`
+
+Each zone is an array of module ids. Use Settings -> Bar -> Bar module layout unless you are debugging. The editor writes through `Config.setNestedValue`, so changes persist. The old `bar.modulesLayout`, `bar.edgeModulesLayout`, and `bar.modulesPlacement` keys are legacy compatibility only.
+
+`bar.height` and `bar.opacity` control the bar size and background fill. They do not resize every widget independently; components still use the normal `Appearance` sizing tokens.
+
+### Right sidebar widgets
+
+`sidebar.right.enabledWidgets` controls the widgets shown in the right sidebar bottom group and compact sidebar.
+
+Known ids include:
+
+`calendar`, `events`, `todo`, `notepad`, `calculator`, `sysmon`, `timer`, `screentime`
+
+`screentime` is only shown when `sidebar.screenTime.enable` is true. The list can contain it while the service is off; the UI filters it out so disabled tracking does not leave a dead card.
+
+### Screen Time
+
+`sidebar.screenTime`:
+
+- `enable`: starts/stops tracking
+- `pollIntervalSeconds`: focused-window sampling interval
+- `retentionDays`: how long local daily JSON is kept
+
+Screen Time is local-only. It records app ids/names and seconds, not window titles.
+
+### World Clock
+
+`sidebar.widgets.worldClock_settings`:
+
+- `timezones`: explicit IANA timezone ids, e.g. `Europe/London`
+- `showSeconds`
+- `use24Hour`
+- `showDate`
+- `highlightLocal`
+
+Empty `timezones` means the widget can show suggestions based on local timezone/region. Once you add zones in Settings, that explicit list wins.
+
+### Wallpaper shuffle
+
+`background.autoWallpaper`:
+
+- `enable`
+- `intervalMinutes`
+- `generateColors`
+- `folder`
+
+If `folder` is empty, shuffle uses the current wallpaper directory. If `generateColors` is off, only the image changes; the shell keeps the current palette.
 
 ## Settings UI
 
