@@ -39,6 +39,7 @@ depends=(
   otf-space-grotesk
   pacman-contrib
   pavucontrol
+  plasma-browser-integration
   plasma-integration
   qt6ct
   socat

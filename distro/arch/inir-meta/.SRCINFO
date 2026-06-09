@@ -34,6 +34,7 @@ pkgbase = inir-meta
 	depends = otf-space-grotesk
 	depends = pacman-contrib
 	depends = pavucontrol
+	depends = plasma-browser-integration
 	depends = plasma-integration
 	depends = qt6ct
 	depends = socat

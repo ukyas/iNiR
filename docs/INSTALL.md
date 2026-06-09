@@ -50,6 +50,7 @@ The bare minimum to not crash immediately:
 | `pipewire` + `wireplumber` | Audio. |
 | `grim` + `slurp` | Screenshots. |
 | `materialyoucolor` | Material You colors from wallpaper (Python, installed via venv). |
+| `plasma-browser-integration` | Browser MPRIS sessions, controls, and artwork. |
 | `plasma-integration` | KDE platform theme plugin (reads kdeglobals for Qt app colors). |
 | `darkly-bin` (AUR) | Darkly Qt style (Material You widget rendering). |
 

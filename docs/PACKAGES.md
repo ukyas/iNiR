@@ -100,6 +100,7 @@ Audio stack and media controls.
 | `pipewire-alsa` | ALSA compat |
 | `wireplumber` | Session manager |
 | `playerctl` | Media player control |
+| `plasma-browser-integration` | Browser media sessions for MPRIS controls/artwork |
 | `libdbusmenu-gtk3` | Tray menus |
 | `pavucontrol` | Volume control GUI |
 | `mpv` | Media playback backend |

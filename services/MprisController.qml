@@ -110,6 +110,8 @@ Singleton {
 		onTriggered: plasmaIntegrationCheckProc.running = true
 	}
 
+	Component.onCompleted: plasmaCheckDefer.start()
+
 	Connections {
 		target: Config
 		function onReadyChanged() {

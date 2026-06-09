@@ -49,6 +49,7 @@ depends=(
   qt6ct
   kvantum
   plasma-integration
+  plasma-browser-integration
   frameworkintegration
   kdecoration
   breeze-icons
