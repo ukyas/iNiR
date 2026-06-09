@@ -181,6 +181,7 @@
             "enable": false
         },
         "wallpaperTheming": {
+            "autoDarkLightMode": false,
             "enableAppsAndShell": true,
             "enableQtApps": true,
             "enableTerminal": true,
@@ -1120,6 +1121,7 @@
                 "notepad",
                 "calculator",
                 "sysmon",
+                "weather",
                 "timer",
                 "screentime"
             ]

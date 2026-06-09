@@ -588,6 +588,10 @@ Singleton {
                     property real contentTransparency: 0.57
                 }
                 property JsonObject wallpaperTheming: JsonObject {
+                    // Auto-pick the light/dark scheme from the wallpaper's brightness
+                    // on each wallpaper change, so UI text stays readable. Opt-in;
+                    // when off, the mode follows the manual dark-mode toggle as before.
+                    property bool autoDarkLightMode: false
                     property bool enableAppsAndShell: true
                     property bool enableQtApps: true
                     property bool enableTerminal: true
@@ -1936,7 +1940,7 @@ Singleton {
 
                 // Right sidebar widget toggles
                 property JsonObject right: JsonObject {
-                    property list<string> enabledWidgets: ["calendar", "todo", "notepad", "calculator", "sysmon", "timer", "screentime"]
+                    property list<string> enabledWidgets: ["calendar", "todo", "notepad", "calculator", "sysmon", "weather", "timer", "screentime"]
                     // Controls section order for compact layout (drag to reorder)
                     property list<string> controlsSectionOrder: ["sliders", "toggles", "devices", "media", "quickActions"]
                 }
