@@ -11,6 +11,7 @@ Screenshots grew a native annotation editor, the AI chat got a real model picker
 
 ### Added
 - **Native annotation editor**: the screenshot Edit action opens an in-shell QML editor instead of shelling out to swappy/satty (which remain available as a fallback toggle).
+- **Smart flexible spacers**: `bar.layout.spacerMode` — smart (elastic on the edges, fixed gap inside centre pills), always elastic, or fixed width. Configurable from Settings next to the spacer width.
 - **Unified snip menu** on `Ctrl+Shift+S`: copy, edit, search, OCR, and record from one surface. Migration 030 updates the keybind.
 - **All-apps grid in the overview**: optional replacement for workspace previews — a scrollable grid of every installed app, alphabetical or grouped by category.
 - **Searchable AI model picker**: the model pill in the AI chat morphs open into a searchable, provider-grouped list with key/local indicators, plus provider presets.
@@ -29,6 +30,10 @@ Screenshots grew a native annotation editor, the AI chat got a real model picker
 - OSD now shows on all selected outputs, not just one.
 - Dock kept showing a pinned app as running (indicator + preview) after its last window closed, until an unrelated focus change. Window state is now published reactively per app.
 - AI model picker popup rendered without a background (it was stacked under the empty-state placeholder) and could overflow the sidebar edge.
+- GTK3 apps were partially unthemed: the generated gtk.css used `!important`, which the GTK3 CSS parser rejects declaration by declaration.
+- Media player popups flashed (full delegate recreation) on every track change.
+- Bar media scroll now also drives the player's PipeWire stream volume when the player has no MPRIS volume support, and no longer applies a stale value after the active player changes.
+- NixOS/Home Manager flake modules failed evaluation (options merged via mkMerge); `homeManagerModules` alias added.
 - Clipboard selected-item text stays readable on any palette.
 - Theme apply no longer leaves a resident Chrome process behind.
 - CustomIcon no longer tries to load empty sources.
