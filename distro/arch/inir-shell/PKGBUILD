@@ -1,7 +1,7 @@
 # Maintainer: snowarch
 
 pkgname=inir-shell
-pkgver=2.26.0
+pkgver=2.27.0
 pkgrel=1
 pkgdesc='iNiR shell payload, launcher, and user service'
 arch=(any)
@@ -80,6 +80,7 @@ optdepends=(
   'nm-connection-editor: default network settings GUI'
   'pavucontrol: advanced audio mixer UI'
   'pacman-contrib: package update checking'
+  'plasma-browser-integration: browser MPRIS sessions and artwork'
   'plasma-integration: Qt platform theme integration'
   'qt6ct: Qt theme configuration'
   'songrec: music recognition support'

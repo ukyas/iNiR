@@ -184,6 +184,7 @@ Item { // Bar content region
     // Visibility still comes from Config.options.bar.modules.*; the arrays only
     // define order/zone. Falls back to the classic layout until migrated.
     readonly property bool _layoutMigrated: Config.options?.bar?.layout?.migrated === true
+    readonly property real _spacerMinimumWidth: Math.max(0, Config.options?.bar?.layout?.spacerWidth ?? 0) * Appearance.fontSizeScale
     function _zone(name, fallback) {
         const a = Config.options?.bar?.layout?.[name]
         return (root._layoutMigrated && a && a.length >= 0) ? a : fallback
@@ -227,8 +228,16 @@ Item { // Bar content region
     // activeWindow/taskbar fill the edge section; resources fills only on the
     // tightest screens. Centre pills size tightly to content, so clock/media do
     // NOT fill — they sit at natural width with no leftover space.
+    readonly property string _spacerMode: Config.options?.bar?.layout?.spacerMode ?? "auto"
     function _fillWidth(id, zone) {
-        if (id === "spacer") return true
+        if (id === "spacer") {
+            // "auto": only stretch where the layout actually has slack (edge
+            // zones); inside content-sized centre pills a greedy spacer fights
+            // the pill sizing and breaks the look — fall back to a fixed gap.
+            if (root._spacerMode === "fixed") return false
+            if (root._spacerMode === "fill") return true
+            return root._fillSlot(zone)
+        }
         if (id === "activeWindow") return root._fillSlot(zone)
         if (id === "resources") return root.useShortenedForm === 2
         return false
@@ -804,7 +813,25 @@ Item { // Bar content region
     // edge. `spacer` is a flexible gap.
     Component { id: timerComponent; TimerIndicator { Layout.alignment: Qt.AlignVCenter } }
     Component { id: shellUpdateComponent; ShellUpdateIndicator { Layout.alignment: Qt.AlignVCenter } }
-    Component { id: spacerComponent; Item { Layout.fillWidth: true; Layout.fillHeight: true } }
+    Component {
+        id: spacerComponent
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: root._spacerMinimumWidth
+            // When the spacer is a fixed gap (no fill slack), an unset width
+            // would make it invisible — keep a sensible minimum gap.
+            implicitWidth: Math.max(root._spacerMinimumWidth, 12)
+            Behavior on implicitWidth {
+                enabled: Appearance.animationsEnabled
+                NumberAnimation {
+                    duration: Appearance.animation.elementResize.duration
+                    easing.type: Appearance.animation.elementResize.type
+                    easing.bezierCurve: Appearance.animation.elementResize.bezierCurve
+                }
+            }
+        }
+    }
     Component {
         id: trayComponent
         SysTray {

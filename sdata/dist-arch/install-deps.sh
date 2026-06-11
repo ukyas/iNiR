@@ -298,6 +298,9 @@ OFFICIAL_PACKAGES=(
   kvantum
   plasma-integration   # Provides QT_QPA_PLATFORMTHEME=kde plugin (reads kdeglobals colors)
 
+  # Browser media integration
+  plasma-browser-integration   # Provides browser MPRIS sessions and artwork
+
   # KDE Frameworks needed by darkly-bin Qt style (lightweight, NOT Plasma)
   frameworkintegration
   kdecoration
@@ -471,7 +474,7 @@ tui_info "Registering dependencies with pacman..."
 _meta_dir="./sdata/dist-arch/inir-deps"
 if [[ -f "$_meta_dir/PKGBUILD" ]]; then
   # Update pkgver from VERSION file
-  _inir_ver="$(cat ./VERSION 2>/dev/null || echo '2.26.0')"
+  _inir_ver="$(cat ./VERSION 2>/dev/null || echo '2.27.0')"
   sed -i "s/^pkgver=.*/pkgver=${_inir_ver}/" "$_meta_dir/PKGBUILD"
 
   (

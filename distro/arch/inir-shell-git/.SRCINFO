@@ -73,6 +73,7 @@ pkgbase = inir-shell-git
 	optdepends = nm-connection-editor: default network settings GUI
 	optdepends = pavucontrol: advanced audio mixer UI
 	optdepends = pacman-contrib: package update checking
+	optdepends = plasma-browser-integration: browser MPRIS sessions and artwork
 	optdepends = plasma-integration: Qt platform theme integration
 	optdepends = qt6ct: Qt theme configuration
 	optdepends = songrec: music recognition support

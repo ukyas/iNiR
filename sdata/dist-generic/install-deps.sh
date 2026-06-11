@@ -212,6 +212,7 @@ echo ""
 
 echo -e "${STY_BLUE}Audio (required):${STY_RST}"
 echo "  pipewire, pipewire-pulse, wireplumber, playerctl, pavucontrol"
+echo "  plasma-browser-integration (browser MPRIS sessions and artwork)"
 echo ""
 
 echo -e "${STY_BLUE}Utilities (required):${STY_RST}"

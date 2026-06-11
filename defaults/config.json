@@ -181,6 +181,7 @@
             "enable": false
         },
         "wallpaperTheming": {
+            "autoDarkLightMode": false,
             "enableAppsAndShell": true,
             "enableQtApps": true,
             "enableTerminal": true,
@@ -680,6 +681,8 @@
                 "spacer",
                 "weather"
             ],
+            "spacerWidth": 0,
+            "spacerMode": "auto",
             "migrated": true
         },
         "resources": {
@@ -959,6 +962,8 @@
     },
     "overview": {
         "activeScreenOnly": false,
+        "allAppsGrid": false,
+        "allAppsGridMode": "minimal",
         "backgroundBlurEnable": true,
         "backgroundBlurRadius": 50,
         "backgroundDim": 40,
@@ -1008,6 +1013,10 @@
             "selectionPadding": 5,
             "showLabel": false,
             "windows": true
+        },
+        "annotation": {
+            "useSatty": false,
+            "useNativeEditor": true
         }
     },
     "resources": {
@@ -1119,6 +1128,7 @@
                 "notepad",
                 "calculator",
                 "sysmon",
+                "weather",
                 "timer",
                 "screentime"
             ]

@@ -2569,7 +2569,25 @@ install_user_service() {
     sed -e "s|^ExecStart=.*|ExecStart=${escaped_launcher} run --session|" \
         -e "s|^ExecStopPost=-.*|ExecStopPost=-${escaped_launcher} cleanup-orphans|" \
         "$asset_path" > "$tmp_file"
-    cp -f "$tmp_file" "$systemd_user_dir/inir.service"
+    if [[ -L "$systemd_user_dir/inir.service" ]]; then
+        local service_dropin_dir="$systemd_user_dir/inir.service.d"
+        local service_override="$service_dropin_dir/override.conf"
+        local override_tmp="${XDG_CACHE_HOME:-$HOME/.cache}/inir.service.override.$$"
+        mkdir -p "$service_dropin_dir"
+        cat > "$override_tmp" <<EOF
+# Managed locally: keep the repo unit template portable while running the
+# developer launcher path from this machine.
+[Service]
+ExecStart=
+ExecStart=${launcher_path} run --session
+ExecStopPost=
+ExecStopPost=-${launcher_path} cleanup-orphans
+EOF
+        cp -f "$override_tmp" "$service_override"
+        rm -f "$override_tmp"
+    else
+        cp -f "$tmp_file" "$systemd_user_dir/inir.service"
+    fi
     rm -f "$tmp_file"
 
     # Migrate: remove old WantedBy=graphical-session.target symlink left by

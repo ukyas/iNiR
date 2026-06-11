@@ -1,4 +1,5 @@
 pragma ComponentBehavior: Bound
+import qs
 import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.common.widgets
@@ -337,8 +338,10 @@ PanelWindow {
         root.regionWidth = Math.max(0, Math.min(root.regionWidth, root.screen.width - root.regionX));
         root.regionHeight = Math.max(0, Math.min(root.regionHeight, root.screen.height - root.regionY));
 
-        if (root.action === RegionSelection.SnipAction.Copy || root.action === RegionSelection.SnipAction.Edit) {
-            root.action = root.mouseButton === Qt.RightButton ? RegionSelection.SnipAction.Edit : RegionSelection.SnipAction.Copy;
+        // Honor the toolbar's explicit action. Right-click while in plain
+        // screenshot (Copy) mode stays a shortcut to annotate instead.
+        if (root.action === RegionSelection.SnipAction.Copy && root.mouseButton === Qt.RightButton) {
+            root.action = RegionSelection.SnipAction.Edit;
         }
 
         const rx = Math.round(root.regionX * root.monitorScale);
@@ -366,6 +369,12 @@ PanelWindow {
                 snipProc.command = ["/usr/bin/bash", "-c", `_dir='${screenshotSaveDir}' && mkdir -p "$_dir" && _ss="$_dir/$(date +'${StringUtils.shellSingleQuoteEscape(root.screenshotNameFormat)}').png" && ${cropToStdout} | tee "$_ss" | /usr/bin/wl-copy && echo -n "$_ss" | /usr/bin/wl-copy --primary && ${cleanup} && /usr/bin/notify-send "Screenshot copied" "${rw}x${rh} saved to $_ss" -a "Screenshot" -i camera-photo -t 3000`]
                 break;
             case RegionSelection.SnipAction.Edit:
+                if (Config.options?.regionSelector?.annotation?.useNativeEditor ?? true) {
+                    editCropProc.editFile = `${root.screenshotDir}/edit-${root.screen.name}.png`;
+                    editCropProc.command = ["/usr/bin/bash", "-c", `${cropBase} '${StringUtils.shellSingleQuoteEscape(editCropProc.editFile)}' && ${cleanup}`];
+                    editCropProc.running = true;
+                    return; // editCropProc.onExited opens the native editor and dismisses
+                }
                 snipProc.command = ["/usr/bin/bash", "-c", `${cropToStdout} | ${annotationCommand} && ${cleanup}`]
                 break;
             case RegionSelection.SnipAction.Search:
@@ -390,8 +399,33 @@ PanelWindow {
         root.dismiss();
     }
 
+    // Capture the whole screen with the current action (no region drawing).
+    function snipFullscreen() {
+        root.dragStartX = 0;
+        root.dragStartY = 0;
+        root.draggingX = root.screen.width;
+        root.draggingY = root.screen.height;
+        root.snip();
+    }
+
     Process {
         id: snipProc
+    }
+
+    // Crops the selected region to a temp file for the native annotation editor,
+    // then opens it. Lives until exit (we dismiss only after it fires).
+    Process {
+        id: editCropProc
+        property string editFile: ""
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0) {
+                GlobalStates.annotationEditorPath = editCropProc.editFile;
+                GlobalStates.annotationEditorOpen = true;
+            } else {
+                Quickshell.execDetached(["/usr/bin/notify-send", "Edit failed", "Could not prepare the region for editing", "-a", "Screenshot", "-t", "3000"]);
+            }
+            root.dismiss();
+        }
     }
 
     Rectangle {
@@ -612,6 +646,12 @@ PanelWindow {
                             onActionChanged: root.action = action
                             onSelectionModeChanged: root.selectionMode = selectionMode
                             onDismiss: root.dismiss();
+                            onFullscreenRequested: root.snipFullscreen()
+                            onColorPickerRequested: {
+                                // Dismiss first so hyprpicker grabs the live desktop, not this overlay.
+                                root.dismiss();
+                                Quickshell.execDetached(["/usr/bin/bash", "-c", "sleep 0.3; /usr/bin/hyprpicker -a"]);
+                            }
                         }
                         Item {
                             anchors.verticalCenter: parent.verticalCenter
@@ -647,6 +687,11 @@ PanelWindow {
                         onActionChanged: root.action = action
                         onSelectionModeChanged: root.selectionMode = selectionMode
                         onDismiss: root.dismiss()
+                        onFullscreenRequested: root.snipFullscreen()
+                        onColorPickerRequested: {
+                            root.dismiss();
+                            Quickshell.execDetached(["/usr/bin/bash", "-c", "sleep 0.3; /usr/bin/hyprpicker -a"]);
+                        }
                     }
                 }
             }

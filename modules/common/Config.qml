@@ -588,6 +588,10 @@ Singleton {
                     property real contentTransparency: 0.57
                 }
                 property JsonObject wallpaperTheming: JsonObject {
+                    // Auto-pick the light/dark scheme from the wallpaper's brightness
+                    // on each wallpaper change, so UI text stays readable. Opt-in;
+                    // when off, the mode follows the manual dark-mode toggle as before.
+                    property bool autoDarkLightMode: false
                     property bool enableAppsAndShell: true
                     property bool enableQtApps: true
                     property bool enableTerminal: true
@@ -1211,6 +1215,8 @@ Singleton {
                     property list<string> center: ["workspaces"]
                     property list<string> centerRight: ["clock", "utilButtons", "battery"]
                     property list<string> right: ["rightSidebarButton", "tray", "timer", "shellUpdate", "spacer", "weather"]
+                    property int spacerWidth: 0 // Minimum width for each flexible spacer, in px. 0 keeps it pure flex.
+                    property string spacerMode: "auto" // "auto": elastic in edge zones, fixed gap in centre pills; "fill": always elastic; "fixed": always spacerWidth
                     // Set true once the old fixed layout has been translated into
                     // the arrays above (handled by a migration). Until then the
                     // bar falls back to its classic hardcoded layout so existing
@@ -1567,6 +1573,8 @@ Singleton {
                 property bool closeAfterWindowMove: true
                 property bool showPreviews: false // Show window thumbnails in overview
                 property bool activeScreenOnly: false // Show only on active screen (multi-monitor)
+                property bool allAppsGrid: false // Show an all-apps grid instead of the workspace overview
+                property string allAppsGridMode: "minimal" // "minimal" (alphabetical) or "folder" (by category)
                 property JsonObject dashboard: JsonObject {
                     property bool enable: false
                     property bool showToggles: true
@@ -1626,6 +1634,9 @@ Singleton {
                 }
                 property JsonObject annotation: JsonObject {
                     property bool useSatty: false
+                    // Use the in-shell native annotation editor for the Edit action
+                    // instead of the external swappy/satty tools.
+                    property bool useNativeEditor: true
                 }
                 property string screenshotNameFormat: "ss-%Y%m%d-%H%M%S" // date(1) format for screenshot filenames (without extension)
             }
@@ -1935,7 +1946,7 @@ Singleton {
 
                 // Right sidebar widget toggles
                 property JsonObject right: JsonObject {
-                    property list<string> enabledWidgets: ["calendar", "todo", "notepad", "calculator", "sysmon", "timer", "screentime"]
+                    property list<string> enabledWidgets: ["calendar", "todo", "notepad", "calculator", "sysmon", "weather", "timer", "screentime"]
                     // Controls section order for compact layout (drag to reorder)
                     property list<string> controlsSectionOrder: ["sliders", "toggles", "devices", "media", "quickActions"]
                 }

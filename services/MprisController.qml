@@ -36,7 +36,17 @@ Singleton {
 				newList.push(player);
 			}
 		}
-		players = newList;
+		// Only reassign on real membership/order changes: a fresh array with the
+		// same players cascades into displayPlayers and makes every Repeater-based
+		// player UI destroy and recreate its delegates (visible flash on track
+		// change, since title changes schedule rebuilds).
+		let changed = newList.length !== players.length;
+		if (!changed) {
+			for (let i = 0; i < newList.length; i++) {
+				if (newList[i] !== players[i]) { changed = true; break; }
+			}
+		}
+		if (changed) players = newList;
 		// Keep trackedPlayer consistent with filtered list
 		if (trackedPlayer && !players.includes(trackedPlayer)) {
 			_manualPlayerSelection = false;
@@ -109,6 +119,8 @@ Singleton {
 		repeat: false
 		onTriggered: plasmaIntegrationCheckProc.running = true
 	}
+
+	Component.onCompleted: plasmaCheckDefer.start()
 
 	Connections {
 		target: Config

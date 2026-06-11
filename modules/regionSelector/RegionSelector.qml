@@ -40,6 +40,13 @@ Scope {
         }
     }
 
+    // Native annotation editor (Edit action). Lives in this Scope so it survives
+    // the selection overlay dismissing.
+    Loader {
+        active: GlobalStates.annotationEditorOpen
+        sourceComponent: AnnotationEditor {}
+    }
+
     function screenshot() {
         root.action = RegionSelection.SnipAction.Copy
         root.selectionMode = RegionSelection.SelectionMode.RectCorners
@@ -74,6 +81,14 @@ Scope {
         GlobalStates.regionSelectorOpen = true
     }
 
+    function menu() {
+        // Unified snip entry point: open the selector with a neutral default; the
+        // in-overlay toolbar lets the user switch action/scope on the fly.
+        root.action = RegionSelection.SnipAction.Copy
+        root.selectionMode = RegionSelection.SelectionMode.RectCorners
+        GlobalStates.regionSelectorOpen = true
+    }
+
     IpcHandler {
         target: "region"
 
@@ -94,6 +109,9 @@ Scope {
         }
         function recordWithSound(): void {
             root.recordWithSound()
+        }
+        function menu(): void {
+            root.menu()
         }
     }
 
@@ -124,6 +142,11 @@ Scope {
                 name: "regionRecordWithSound"
                 description: "Records the selected region with sound"
                 onPressed: root.recordWithSound()
+            }
+            GlobalShortcut {
+                name: "regionMenu"
+                description: "Opens the unified snip menu"
+                onPressed: root.menu()
             }
         }
     }

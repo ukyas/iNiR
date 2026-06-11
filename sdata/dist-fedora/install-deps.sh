@@ -256,6 +256,7 @@ FEDORA_AUDIO_PKGS=(
   pipewire-alsa
   wireplumber
   playerctl
+  plasma-browser-integration
   libdbusmenu-gtk3
   pavucontrol
   cava

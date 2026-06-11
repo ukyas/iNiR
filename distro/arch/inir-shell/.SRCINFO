@@ -1,6 +1,6 @@
 pkgbase = inir-shell
 	pkgdesc = iNiR shell payload, launcher, and user service
-	pkgver = 2.26.0
+	pkgver = 2.27.0
 	pkgrel = 1
 	url = https://github.com/snowarch/iNiR
 	arch = any
@@ -73,6 +73,7 @@ pkgbase = inir-shell
 	optdepends = nm-connection-editor: default network settings GUI
 	optdepends = pavucontrol: advanced audio mixer UI
 	optdepends = pacman-contrib: package update checking
+	optdepends = plasma-browser-integration: browser MPRIS sessions and artwork
 	optdepends = plasma-integration: Qt platform theme integration
 	optdepends = qt6ct: Qt theme configuration
 	optdepends = songrec: music recognition support
@@ -92,7 +93,7 @@ pkgbase = inir-shell
 	conflicts = noctalia-qs
 	conflicts = noctalia-shell
 	conflicts = cachyos-niri-noctalia
-	source = inir-2.26.0.tar.gz::https://github.com/snowarch/iNiR/archive/refs/tags/v2.26.0.tar.gz
+	source = inir-2.27.0.tar.gz::https://github.com/snowarch/iNiR/archive/refs/tags/v2.27.0.tar.gz
 	sha256sums = SKIP
 
 pkgname = inir-shell

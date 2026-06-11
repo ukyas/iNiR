@@ -279,6 +279,12 @@ Item {
     // ─── Dock Items Model ────────────────────────────────────────────────
     property var dockItems: []
 
+    // Reactive per-app toplevel map keyed by uniqueId. DockAppButton reads this
+    // instead of its modelData snapshot: ScriptModel matches items by uniqueId,
+    // so a pinned app going open→closed keeps its delegate and the snapshot
+    // would leave a stale running indicator/preview until an unrelated reorder.
+    property var toplevelsByUniqueId: ({})
+
     // Direct reactive binding to Config - will automatically trigger when Config changes
     readonly property bool separatePinnedFromRunning: Config.options?.dock?.separatePinnedFromRunning ?? true
     onSeparatePinnedFromRunningChanged: {
@@ -539,6 +545,12 @@ Item {
                 });
             }
         }
+
+        // Always refresh the reactive toplevel map, even when the model
+        // structure is unchanged — delegates bind to it for live window state.
+        const tlMap = {}
+        for (const v of values) tlMap[v.uniqueId] = v.toplevels
+        root.toplevelsByUniqueId = tlMap
 
         // Skip update if the model structure is identical — avoids
         // ScriptModel churn and downstream binding re-evaluations.
